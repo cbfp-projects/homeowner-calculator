@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homeowner Monthly Rate Estimator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .input-section {
+            grid-column: 1;
+        }
+
+        .results-section {
+            grid-column: 2;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            padding-left: 35px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .total-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .total-result .result-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 0;
+        }
+
+        .total-result .result-label,
+        .total-result .result-value {
+            color: white;
+        }
+
+        .grand-total {
+            font-size: 1.5em;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .info-text {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .toggle-section {
+            margin-bottom: 20px;
+        }
+
+        .toggle-header {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .toggle-header:hover {
+            background: #e8e8e8;
+        }
+
+        .toggle-content {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .toggle-content.active {
+            display: block;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s;
+        }
+
+        .toggle-icon.active {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .input-section,
+            .results-section {
+                grid-column: 1;
+            }
+
+            .results-section {
+                position: static;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .chart-bar {
+            margin: 10px 0;
+        }
+
+        .chart-label {
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bar-wrapper {
+            background: #e0e0e0;
+            height: 25px;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 0.8em;
+            font-weight: 600;
+            min-width: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Homeowner Monthly Rate Estimator</h1>
+            <p>Calculate your total monthly homeownership costs</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <!-- Home Purchase Details -->
+                <div class="toggle-section">
+                    <div class="toggle-header" onclick="toggleSection('purchase')">
+                        <span><strong>🏡 Home Purchase Details</strong></span>
+                        <span class="toggle-icon active" id="icon-purchase">▼</span>
+                    </div>
+                    <div class="toggle-content active" id="section-purchase">
+                        <div class="form-group">
+                            <label for="homePrice">Home Price</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="homePrice" value="350000" min="0" step="1000">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="downPayment">Down Payment (%)</label>
+                            <input type="number" id="downPayment" value="20" min="0" max="100" step="0.5">
+                            <span class="info-text" id="downPaymentAmount">\$70,000</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="interestRate">Interest Rate (%)</label>
+                            <input type="number" id="interestRate" value="6.5" min="0" max="20" step="0.125">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="loanTerm">Loan Term (years)</label>
+                            <select id="loanTerm">
+                                <option value="15">15 years</option>
+                                <option value="20">20 years</option>
+                                <option value="30" selected>30 years</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Property Taxes & Insurance -->
+                <div class="toggle-section">
+                    <div class="toggle-header" onclick="toggleSection('taxes')">
+                        <span><strong>💰 Property Taxes & Insurance</strong></span>
+                        <span class="toggle-icon active" id="icon-taxes">▼</span>
+                    </div>
+                    <div class="toggle-content active" id="section-taxes">
+                        <div class="form-group">
+                            <label for="propertyTaxRate">Annual Property Tax Rate (%)</label>
+                            <input type="number" id="propertyTaxRate" value="1.2" min="0" max="10" step="0.1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="homeInsurance">Annual Home Insurance</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="homeInsurance" value="1200" min="0" step="50">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pmi">PMI (if down payment < 20%)</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="pmi" value="0" min="0" step="10">
+                            </div>
+                            <span class="info-text">Private Mortgage Insurance (monthly)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HOA & Utilities -->
+                <div class="toggle-section">
+                    <div class="toggle-header" onclick="toggleSection('utilities')">
+                        <span><strong>🔧 HOA & Utilities</strong></span>
+                        <span class="toggle-icon active" id="icon-utilities">▼</span>
+                    </div>
+                    <div class="toggle-content active" id="section-utilities">
+                        <div class="form-group">
+                            <label for="hoa">Monthly HOA Fees</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="hoa" value="0" min="0" step="10">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="utilities">Monthly Utilities (Est.)</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="utilities" value="200" min="0" step="10">
+                            </div>
+                            <span class="info-text">Electric, water, gas, trash, etc.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="internet">Internet/Cable/Phone</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="internet" value="100" min="0" step="5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance & Other -->
+                <div class="toggle-section">
+                    <div class="toggle-header" onclick="toggleSection('maintenance')">
+                        <span><strong>🔨 Maintenance & Other Costs</strong></span>
+                        <span class="toggle-icon active" id="icon-maintenance">▼</span>
+                    </div>
+                    <div class="toggle-content active" id="section-maintenance">
+                        <div class="form-group">
+                            <label for="maintenanceRate">Maintenance (% of home value annually)</label>
+                            <input type="number" id="maintenanceRate" value="1" min="0" max="5" step="0.1">
+                            <span class="info-text">Typical: 1% of home value per year</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="landscaping">Landscaping/Yard Care</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="landscaping" value="50" min="0" step="10">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="other">Other Monthly Costs</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="other" value="0" min="0" step="10">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2 class="section-title">Monthly Cost Breakdown</h2>
+                
+                <div class="result-item">
+                    <span class="result-label">Principal & Interest</span>
+                    <span class="result-value" id="principalInterest">\$0</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Property Tax</span>
+                    <span class="result-value" id="propertyTax">\$0</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Home Insurance</span>
+                    <span class="result-value" id="insurance">\$0</span>
+                </div>
+                
+                <div class="result-item" id="pmiRow">
+                    <span class="result-label">PMI</span>
+                    <span class="result-value" id="pmiDisplay">\$0</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">HOA Fees</span>
+                    <span class="result-value" id="hoaDisplay">\$0</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Utilities</span>
+                    <span class="result-value" id="utilitiesDisplay">\$0</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Internet/Cable/Phone</span>
+                    <span class="result-value" id="internetDisplay">\$0</span>
+<span class="result-value" id="internetDisplay">$0</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Maintenance</span>
+                    <span class="result-value" id="maintenanceDisplay">$0</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Landscaping</span>
+                    <span class="result-value" id="landscapingDisplay">$0</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">Other Costs</span>
+                    <span class="result-value" id="otherDisplay">$0</span>
+                </div>
+
+                <div class="total-result">
+                    <div class="result-item grand-total">
+                        <span class="result-label">TOTAL MONTHLY COST</span>
+                        <span class="result-value" id="totalMonthly">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Total Annual Cost</span>
+                        <span class="result-value" id="totalAnnual">$0</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 15px; color: #333;">Cost Distribution</h3>
+                    <div id="chartBars"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get all input elements
+        const inputs = {
+            homePrice: document.getElementById('homePrice'),
+            downPayment: document.getElementById('downPayment'),
+            interestRate: document.getElementById('interestRate'),
+            loanTerm: document.getElementById('loanTerm'),
+            propertyTaxRate: document.getElementById('propertyTaxRate'),
+            homeInsurance: document.getElementById('homeInsurance'),
+            pmi: document.getElementById('pmi'),
+            hoa: document.getElementById('hoa'),
+            utilities: document.getElementById('utilities'),
+            internet: document.getElementById('internet'),
+            maintenanceRate: document.getElementById('maintenanceRate'),
+            landscaping: document.getElementById('landscaping'),
+            other: document.getElementById('other')
+        };
+
+        // Add event listeners to all inputs
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', calculateMonthlyRate);
+        });
+
+        // Toggle section function
+        function toggleSection(sectionName) {
+            const section = document.getElementById('section-' + sectionName);
+            const icon = document.getElementById('icon-' + sectionName);
+            
+            section.classList.toggle('active');
+            icon.classList.toggle('active');
+        }
+
+        // Calculate monthly mortgage payment
+        function calculateMortgage(principal, annualRate, years) {
+            const monthlyRate = annualRate / 100 / 12;
+            const numberOfPayments = years * 12;
+            
+            if (monthlyRate === 0) {
+                return principal / numberOfPayments;
+            }
+            
+            const monthlyPayment = principal * 
+                (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
+                (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+            
+            return monthlyPayment;
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return '$' + amount.toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+
+        // Calculate and display monthly rate
+        function calculateMonthlyRate() {
+            // Get values
+            const homePrice = parseFloat(inputs.homePrice.value) || 0;
+            const downPaymentPercent = parseFloat(inputs.downPayment.value) || 0;
+            const interestRate = parseFloat(inputs.interestRate.value) || 0;
+            const loanTerm = parseInt(inputs.loanTerm.value) || 30;
+            const propertyTaxRate = parseFloat(inputs.propertyTaxRate.value) || 0;
+            const homeInsurance = parseFloat(inputs.homeInsurance.value) || 0;
+            const pmi = parseFloat(inputs.pmi.value) || 0;
+            const hoa = parseFloat(inputs.hoa.value) || 0;
+            const utilities = parseFloat(inputs.utilities.value) || 0;
+            const internet = parseFloat(inputs.internet.value) || 0;
+            const maintenanceRate = parseFloat(inputs.maintenanceRate.value) || 0;
+            const landscaping = parseFloat(inputs.landscaping.value) || 0;
+            const other = parseFloat(inputs.other.value) || 0;
+
+            // Calculate loan amount
+            const downPaymentAmount = homePrice * (downPaymentPercent / 100);
+            const loanAmount = homePrice - downPaymentAmount;
+
+            // Update down payment display
+            document.getElementById('downPaymentAmount').textContent = formatCurrency(downPaymentAmount);
+
+            // Calculate monthly costs
+            const principalInterest = calculateMortgage(loanAmount, interestRate, loanTerm);
+            const propertyTax = (homePrice * (propertyTaxRate / 100)) / 12;
+            const insurance = homeInsurance / 12;
+            const maintenance = (homePrice * (maintenanceRate / 100)) / 12;
+
+            // Update displays
+            document.getElementById('principalInterest').textContent = formatCurrency(principalInterest);
+            document.getElementById('propertyTax').textContent = formatCurrency(propertyTax);
+            document.getElementById('insurance').textContent = formatCurrency(insurance);
+            document.getElementById('pmiDisplay').textContent = formatCurrency(pmi);
+            document.getElementById('hoaDisplay').textContent = formatCurrency(hoa);
+            document.getElementById('utilitiesDisplay').textContent = formatCurrency(utilities);
+            document.getElementById('internetDisplay').textContent = formatCurrency(internet);
+            document.getElementById('maintenanceDisplay').textContent = formatCurrency(maintenance);
+            document.getElementById('landscapingDisplay').textContent = formatCurrency(landscaping);
+            document.getElementById('otherDisplay').textContent = formatCurrency(other);
+
+            // Calculate total
+            const totalMonthly = principalInterest + propertyTax + insurance + pmi + 
+                               hoa + utilities + internet + maintenance + landscaping + other;
+            const totalAnnual = totalMonthly * 12;
+
+            document.getElementById('totalMonthly').textContent = formatCurrency(totalMonthly);
+            document.getElementById('totalAnnual').textContent = formatCurrency(totalAnnual);
+
+            // Update chart
+            updateChart({
+                'Principal & Interest': principalInterest,
+                'Property Tax': propertyTax,
+                'Insurance': insurance,
+                'PMI': pmi,
+                'HOA': hoa,
+                'Utilities': utilities,
+                'Internet/Cable': internet,
+                'Maintenance': maintenance,
+                'Landscaping': landscaping,
+                'Other': other
+            }, totalMonthly);
+        }
+
+        // Update chart
+        function updateChart(costs, total) {
+            const chartContainer = document.getElementById('chartBars');
+            chartContainer.innerHTML = '';
+
+            // Filter out zero values and sort by amount
+            const sortedCosts = Object.entries(costs)
+                .filter(([_, amount]) => amount > 0)
+                .sort((a, b) => b[1] - a[1]);
+
+            sortedCosts.forEach(([label, amount]) => {
+                const percentage = (amount / total) * 100;
+                const barHtml = `
+                    <div class="chart-bar">
+                        <div class="chart-label">
+                            <span>${label}</span>
+                            <span>${formatCurrency(amount)} (${percentage.toFixed(1)}%)</span>
+                        </div>
+                        <div class="bar-wrapper">
+                            <div class="bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                chartContainer.innerHTML += barHtml;
+            });
+        }
+
+        // Initial calculation
+        calculateMonthlyRate();
+    </script>
+</body>
+</html>
