@@ -157,11 +157,53 @@
             color: white;
         }
 
+        .total-result .total-monthly-group .result-item {
+            padding: 6px 0;
+        }
+
         .grand-total {
             font-size: 1.5em;
             margin-top: 15px;
             padding-top: 15px;
             border-top: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .total-result .total-annual-group {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.35);
+            font-size: 0.95em;
+        }
+
+        .total-result .total-annual-group .result-item {
+            padding: 5px 0;
+        }
+
+        .total-result .result-value.net-monthly-savings-negative {
+            color: #ff2d2d !important;
+            font-weight: 700;
+        }
+
+        .tax-break-card {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f1f8f4;
+            border: 1px solid #b7e4c7;
+            border-radius: 10px;
+        }
+
+        .tax-break-card .result-item {
+            border-bottom: 1px solid #d8f3dc;
+            padding: 8px 0;
+        }
+
+        .tax-break-card .result-label {
+            color: #1b4332;
+        }
+
+        .tax-break-card .result-value {
+            color: #2d6a4f;
+            font-weight: 600;
         }
 
         .info-text {
@@ -284,16 +326,24 @@
                     </div>
                     <div class="toggle-content active" id="section-purchase">
                         <div class="form-group">
+                            <label for="desiredMonthlySaving">Desired monthly saving</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="desiredMonthlySaving" value="1500" min="0" step="500">
+                            </div>
+                            <span class="info-text">Target savings after housing costs</span>
+                        </div>
+                        <div class="form-group">
                             <label for="homePrice">Home Price</label>
                             <div class="input-group">
                                 <span class="input-prefix">$</span>
-                                <input type="number" id="homePrice" value="1200000" min="0" step="20000">
+                                <input type="number" id="homePrice" value="1100000" min="0" step="20000">
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label for="downPayment">Down Payment (%)</label>
-                            <input type="number" id="downPayment" value="20" min="0" max="100" step="0.5">
+                            <input type="number" id="downPayment" value="25" min="0" max="100" step="0.5">
                             <span class="info-text" id="downPaymentAmount">\$240,000</span>
                         </div>
 
@@ -329,7 +379,7 @@
                             <label for="homeInsurance">Annual Home Insurance</label>
                             <div class="input-group">
                                 <span class="input-prefix">$</span>
-                                <input type="number" id="homeInsurance" value="800" min="0" step="50">
+                                <input type="number" id="homeInsurance" value="12000" min="0" step="50">
                             </div>
                         </div>
 
@@ -340,6 +390,18 @@
                                 <input type="number" id="pmi" value="0" min="0" step="10">
                             </div>
                             <span class="info-text">Private Mortgage Insurance (monthly)</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="federalTaxRate">Federal Marginal Tax Rate (%)</label>
+                            <input type="number" id="federalTaxRate" value="32" min="0" max="37" step="1">
+                            <span class="info-text">For tax break estimate (itemized deductions)</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stateTaxRate">State Marginal Tax Rate (%) — California</label>
+                            <input type="number" id="stateTaxRate" value="9.3" min="0" max="15" step="0.1">
+                            <span class="info-text">California top bracket ~9.3% (13.3% with surcharge)</span>
                         </div>
                     </div>
                 </div>
@@ -387,7 +449,7 @@
                     <div class="toggle-content active" id="section-maintenance">
                         <div class="form-group">
                             <label for="maintenanceRate">Maintenance (% of home value annually)</label>
-                            <input type="number" id="maintenanceRate" value="1" min="0" max="5" step="0.1">
+                            <input type="number" id="maintenanceRate" value="3" min="0" max="5" step="0.1">
                             <span class="info-text">Typical: 1% of home value per year</span>
                         </div>
 
@@ -411,73 +473,58 @@
             </div>
 
             <div class="results-section">
-                <h2 class="section-title">Monthly Cost Breakdown</h2>
-                
-                <div class="result-item">
-                    <span class="result-label">Principal & Interest</span>
-                    <span class="result-value" id="principalInterest">\$0</span>
-                </div>
-                
-                <div class="result-item">
-                    <span class="result-label">Property Tax</span>
-                    <span class="result-value" id="propertyTax">\$0</span>
-                </div>
-                
-                <div class="result-item">
-                    <span class="result-label">Home Insurance</span>
-                    <span class="result-value" id="insurance">\$0</span>
-                </div>
-                
-                <div class="result-item" id="pmiRow">
-                    <span class="result-label">PMI</span>
-                    <span class="result-value" id="pmiDisplay">\$0</span>
-                </div>
-                
-                <div class="result-item">
-                    <span class="result-label">HOA Fees</span>
-                    <span class="result-value" id="hoaDisplay">\$0</span>
-                </div>
-                
-                <div class="result-item">
-                    <span class="result-label">Utilities</span>
-                    <span class="result-value" id="utilitiesDisplay">\$0</span>
-                </div>
-                
-                <div class="result-item">
-                    <span class="result-label">Internet/Cable/Phone</span>
-                    <span class="result-value" id="internetDisplay">\$0</span>
-<span class="result-value" id="internetDisplay">$0</span>
-                </div>
-                
-                <div class="result-item">
-                    <span class="result-label">Maintenance</span>
-                    <span class="result-value" id="maintenanceDisplay">$0</span>
-                </div>
-                
-                <div class="result-item">
-                    <span class="result-label">Landscaping</span>
-                    <span class="result-value" id="landscapingDisplay">$0</span>
-                </div>
-                
-                <div class="result-item">
-                    <span class="result-label">Other Costs</span>
-                    <span class="result-value" id="otherDisplay">$0</span>
-                </div>
-
                 <div class="total-result">
-                    <div class="result-item grand-total">
-                        <span class="result-label">TOTAL MONTHLY COST</span>
-                        <span class="result-value" id="totalMonthly">$0</span>
+                    <div class="total-monthly-group">
+                        <div class="result-item grand-total">
+                            <span class="result-label">TOTAL MONTHLY COST</span>
+                            <span class="result-value" id="totalMonthly">$0</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Net monthly cost</span>
+                            <span class="result-value" id="netMonthly">$0</span>
+                        </div>
+                        <div class="result-item" id="netMonthlySavingsRow">
+                            <span class="result-label">Net monthly savings</span>
+                            <span class="result-value" id="netMonthlySavings">$0</span>
+                        </div>
                     </div>
-                    <div class="result-item">
-                        <span class="result-label">Total Annual Cost</span>
-                        <span class="result-value" id="totalAnnual">$0</span>
+                    <div class="total-annual-group">
+                        <div class="result-item">
+                            <span class="result-label">Total annual cost</span>
+                            <span class="result-value" id="totalAnnual">$0</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Net annual cost</span>
+                            <span class="result-value" id="netAnnual">$0</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="chart-container">
                     <h3 style="margin-bottom: 15px; color: #333;">Cost Distribution</h3>
                     <div id="chartBars"></div>
+                </div>
+
+                <div class="tax-break-card">
+                    <h3 style="margin-bottom: 12px; color: #2d6a4f; font-size: 1.1em;">Tax break (est.)</h3>
+                    <div class="result-item">
+                        <span class="result-label">Total tax break (monthly)</span>
+                        <span class="result-value" id="taxBreakTotal">$0</span>
+                    </div>
+                    <p class="info-text" style="margin: 8px 0 12px 0;">Tax break distribution</p>
+                    <div class="result-item">
+                        <span class="result-label">Federal (mortgage interest + SALT)</span>
+                        <span class="result-value" id="taxBreakFederal">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">State (interest + property tax)</span>
+                        <span class="result-value" id="taxBreakState">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">SALT deduction (federal)</span>
+                        <span class="result-value" id="taxBreakSALT">$0</span>
+                    </div>
+                    <p class="info-text" style="margin-top: 10px; font-size: 0.8em;">Estimates assume itemized deductions. SALT capped at $40,400 (federal, 2026+). Loan limit $750k for interest. State: California.</p>
                 </div>
             </div>
         </div>
@@ -486,6 +533,7 @@
     <script>
         // Get all input elements
         const inputs = {
+            desiredMonthlySaving: document.getElementById('desiredMonthlySaving'),
             homePrice: document.getElementById('homePrice'),
             downPayment: document.getElementById('downPayment'),
             interestRate: document.getElementById('interestRate'),
@@ -493,6 +541,8 @@
             propertyTaxRate: document.getElementById('propertyTaxRate'),
             homeInsurance: document.getElementById('homeInsurance'),
             pmi: document.getElementById('pmi'),
+            federalTaxRate: document.getElementById('federalTaxRate'),
+            stateTaxRate: document.getElementById('stateTaxRate'),
             hoa: document.getElementById('hoa'),
             utilities: document.getElementById('utilities'),
             internet: document.getElementById('internet'),
@@ -519,16 +569,33 @@
         function calculateMortgage(principal, annualRate, years) {
             const monthlyRate = annualRate / 100 / 12;
             const numberOfPayments = years * 12;
-            
+
             if (monthlyRate === 0) {
                 return principal / numberOfPayments;
             }
-            
-            const monthlyPayment = principal * 
-                (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
+
+            const monthlyPayment = principal *
+                (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
                 (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
-            
+
             return monthlyPayment;
+        }
+
+        // First-year mortgage interest (for tax deduction estimate). Interest deductible on up to $750k loan.
+        const MORTGAGE_INTEREST_LOAN_CAP = 750000;
+        const SALT_CAP = 40400; // 2026+ (was $10,000 through 2025)
+
+        function getAnnualMortgageInterest(principal, annualRate, years) {
+            const monthlyRate = annualRate / 100 / 12;
+            const monthlyPayment = calculateMortgage(principal, annualRate, years);
+            let balance = principal;
+            let yearInterest = 0;
+            for (let month = 1; month <= 12; month++) {
+                const interest = balance * monthlyRate;
+                yearInterest += interest;
+                balance -= (monthlyPayment - interest);
+            }
+            return yearInterest;
         }
 
         // Format currency
@@ -569,18 +636,6 @@
             const insurance = homeInsurance / 12;
             const maintenance = (homePrice * (maintenanceRate / 100)) / 12;
 
-            // Update displays
-            document.getElementById('principalInterest').textContent = formatCurrency(principalInterest);
-            document.getElementById('propertyTax').textContent = formatCurrency(propertyTax);
-            document.getElementById('insurance').textContent = formatCurrency(insurance);
-            document.getElementById('pmiDisplay').textContent = formatCurrency(pmi);
-            document.getElementById('hoaDisplay').textContent = formatCurrency(hoa);
-            document.getElementById('utilitiesDisplay').textContent = formatCurrency(utilities);
-            document.getElementById('internetDisplay').textContent = formatCurrency(internet);
-            document.getElementById('maintenanceDisplay').textContent = formatCurrency(maintenance);
-            document.getElementById('landscapingDisplay').textContent = formatCurrency(landscaping);
-            document.getElementById('otherDisplay').textContent = formatCurrency(other);
-
             // Calculate total
             const totalMonthly = principalInterest + propertyTax + insurance + pmi + 
                                hoa + utilities + internet + maintenance + landscaping + other;
@@ -588,6 +643,36 @@
 
             document.getElementById('totalMonthly').textContent = formatCurrency(totalMonthly);
             document.getElementById('totalAnnual').textContent = formatCurrency(totalAnnual);
+
+            // Tax break estimate (itemized: mortgage interest + SALT)
+            const federalRate = (parseFloat(inputs.federalTaxRate.value) || 0) / 100;
+            const stateRate = (parseFloat(inputs.stateTaxRate.value) || 0) / 100;
+            const annualPropertyTax = homePrice * (propertyTaxRate / 100);
+            const annualInterest = getAnnualMortgageInterest(loanAmount, interestRate, loanTerm);
+            const deductibleInterest = loanAmount <= MORTGAGE_INTEREST_LOAN_CAP
+                ? annualInterest
+                : annualInterest * (MORTGAGE_INTEREST_LOAN_CAP / loanAmount);
+            const saltDeductible = Math.min(annualPropertyTax, SALT_CAP);
+            const federalSavings = (deductibleInterest + saltDeductible) * federalRate;
+            const saltSavings = saltDeductible * federalRate;
+            const stateSavings = (annualInterest + annualPropertyTax) * stateRate;
+            const taxBreakAnnual = federalSavings + stateSavings;
+            const taxBreakMonthly = taxBreakAnnual / 12;
+
+            document.getElementById('taxBreakTotal').textContent = formatCurrency(taxBreakMonthly);
+            document.getElementById('taxBreakFederal').textContent = formatCurrency(federalSavings / 12);
+            document.getElementById('taxBreakState').textContent = formatCurrency(stateSavings / 12);
+            document.getElementById('taxBreakSALT').textContent = formatCurrency(saltSavings / 12);
+
+            const netMonthlyCost = Math.max(0, totalMonthly - taxBreakMonthly);
+            document.getElementById('netMonthly').textContent = formatCurrency(netMonthlyCost);
+            document.getElementById('netAnnual').textContent = formatCurrency(Math.max(0, totalAnnual - taxBreakAnnual));
+
+            const desiredMonthlySaving = parseFloat(inputs.desiredMonthlySaving.value) || 0;
+            const netMonthlySavings = 11000 - netMonthlyCost;
+            const netMonthlySavingsEl = document.getElementById('netMonthlySavings');
+            netMonthlySavingsEl.textContent = formatCurrency(netMonthlySavings);
+            netMonthlySavingsEl.classList.toggle('net-monthly-savings-negative', netMonthlySavings < desiredMonthlySaving);
 
             // Update chart
             updateChart({
