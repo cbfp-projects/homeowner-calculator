@@ -326,14 +326,6 @@
                     </div>
                     <div class="toggle-content active" id="section-purchase">
                         <div class="form-group">
-                            <label for="desiredMonthlySaving">Desired monthly saving</label>
-                            <div class="input-group">
-                                <span class="input-prefix">$</span>
-                                <input type="number" id="desiredMonthlySaving" value="1500" min="0" step="500">
-                            </div>
-                            <span class="info-text">Target savings after housing costs</span>
-                        </div>
-                        <div class="form-group">
                             <label for="homePrice">Home Price</label>
                             <div class="input-group">
                                 <span class="input-prefix">$</span>
@@ -359,6 +351,38 @@
                                 <option value="20">20 years</option>
                                 <option value="30" selected>30 years</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Budget Items -->
+                <div class="toggle-section">
+                    <div class="toggle-header" onclick="toggleSection('budget')">
+                        <span><strong>📋 Other Budget Items</strong></span>
+                        <span class="toggle-icon active" id="icon-budget">▼</span>
+                    </div>
+                    <div class="toggle-content active" id="section-budget">
+                        <div class="form-group">
+                            <label for="desiredMonthlySaving">Desired monthly saving</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="desiredMonthlySaving" value="500" min="0" step="100">
+                            </div>
+                            <span class="info-text">Target savings after housing and other budget items</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="monthlyDaycare">Monthly Daycare</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="monthlyDaycare" value="3000" min="0" step="100">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="spendingEffort">Spending effort</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="spendingEffort" value="1500" min="0" step="100">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -534,6 +558,8 @@
         // Get all input elements
         const inputs = {
             desiredMonthlySaving: document.getElementById('desiredMonthlySaving'),
+            monthlyDaycare: document.getElementById('monthlyDaycare'),
+            spendingEffort: document.getElementById('spendingEffort'),
             homePrice: document.getElementById('homePrice'),
             downPayment: document.getElementById('downPayment'),
             interestRate: document.getElementById('interestRate'),
@@ -669,10 +695,13 @@
             document.getElementById('netAnnual').textContent = formatCurrency(Math.max(0, totalAnnual - taxBreakAnnual));
 
             const desiredMonthlySaving = parseFloat(inputs.desiredMonthlySaving.value) || 0;
+            const monthlyDaycare = parseFloat(inputs.monthlyDaycare.value) || 0;
+            const spendingEffort = parseFloat(inputs.spendingEffort.value) || 0;
+            const savingsThreshold = monthlyDaycare - spendingEffort + desiredMonthlySaving;
             const netMonthlySavings = 11000 - netMonthlyCost;
             const netMonthlySavingsEl = document.getElementById('netMonthlySavings');
             netMonthlySavingsEl.textContent = formatCurrency(netMonthlySavings);
-            netMonthlySavingsEl.classList.toggle('net-monthly-savings-negative', netMonthlySavings < desiredMonthlySaving);
+            netMonthlySavingsEl.classList.toggle('net-monthly-savings-negative', netMonthlySavings < savingsThreshold);
 
             // Update chart
             updateChart({
