@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -28,7 +28,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -44,24 +44,23 @@
         }
 
         .content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
             padding: 30px;
         }
 
-        .input-section {
-            grid-column: 1;
+
+        .purchase-section-wrap {
+            padding: 0 30px 20px 30px;
         }
 
-        .results-section {
-            grid-column: 2;
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            position: sticky;
-            top: 20px;
-            height: fit-content;
+        .results-top-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 0 30px 20px 30px;
+        }
+
+        .chart-section {
+            padding: 0 30px 20px 30px;
         }
 
         .form-group {
@@ -89,8 +88,8 @@
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
         }
 
         .input-group {
@@ -112,10 +111,10 @@
 
         .section-title {
             font-size: 1.3em;
-            color: #667eea;
+            color: #059669;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid #059669;
         }
 
         .result-item {
@@ -142,7 +141,7 @@
         .total-result {
             margin-top: 20px;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
             border-radius: 10px;
             color: white;
         }
@@ -182,6 +181,13 @@
         .total-result .result-value.net-monthly-savings-negative {
             color: #ff2d2d !important;
             font-weight: 700;
+        }
+
+        .total-result .total-result-minimum-note {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.9em;
+            font-style: italic;
+            text-align: right;
         }
 
         .tax-break-card {
@@ -237,7 +243,27 @@
         }
 
         .toggle-content.active {
-            display: block;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px 24px;
+            align-items: start;
+        }
+
+        #section-purchase.toggle-content.active {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .toggle-content.active .form-group {
+            margin-bottom: 0;
+        }
+
+        .toggle-content.active .form-group label {
+            min-height: 2.6em;
+            line-height: 1.3;
+        }
+
+        .toggle-content.active .form-group .info-text {
+            margin-top: 4px;
         }
 
         .toggle-icon {
@@ -249,17 +275,12 @@
         }
 
         @media (max-width: 768px) {
-            .content {
+            .toggle-content.active {
                 grid-template-columns: 1fr;
             }
 
-            .input-section,
-            .results-section {
-                grid-column: 1;
-            }
-
-            .results-section {
-                position: static;
+            .results-top-row {
+                grid-template-columns: 1fr;
             }
 
             .header h1 {
@@ -274,38 +295,47 @@
             border-radius: 10px;
         }
 
-        .chart-bar {
-            margin: 10px 0;
-        }
-
-        .chart-label {
-            font-size: 0.85em;
-            margin-bottom: 5px;
-            color: #666;
+        .pie-chart-wrap {
             display: flex;
-            justify-content: space-between;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
         }
 
-        .bar-wrapper {
-            background: #e0e0e0;
-            height: 25px;
-            border-radius: 5px;
-            overflow: hidden;
-            position: relative;
+        .pie-chart-svg {
+            flex-shrink: 0;
         }
 
-        .bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            transition: width 0.5s ease;
+        .pie-chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        .pie-legend-item {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            padding-right: 10px;
-            color: white;
-            font-size: 0.8em;
+            gap: 10px;
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .pie-legend-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .pie-legend-label {
+            flex: 1;
+        }
+
+        .pie-legend-value {
             font-weight: 600;
-            min-width: 30px;
+            color: #555;
         }
     </style>
 </head>
@@ -316,46 +346,105 @@
             <p>Calculate your total monthly homeownership costs</p>
         </div>
 
-        <div class="content">
-            <div class="input-section">
-                <!-- Home Purchase Details -->
-                <div class="toggle-section">
-                    <div class="toggle-header" onclick="toggleSection('purchase')">
-                        <span><strong>🏡 Home Purchase Details</strong></span>
-                        <span class="toggle-icon active" id="icon-purchase">▼</span>
+        <div class="purchase-section-wrap">
+            <div class="toggle-section">
+                <div class="toggle-header" onclick="toggleSection('purchase')">
+                    <span><strong>🏡 Home Purchase Details</strong></span>
+                    <span class="toggle-icon active" id="icon-purchase">▼</span>
+                </div>
+                <div class="toggle-content active" id="section-purchase">
+                    <div class="form-group">
+                        <label for="homePrice">Home Price</label>
+                        <div class="input-group">
+                            <span class="input-prefix">$</span>
+                            <input type="number" id="homePrice" value="1100000" min="0" step="20000">
+                        </div>
                     </div>
-                    <div class="toggle-content active" id="section-purchase">
-                        <div class="form-group">
-                            <label for="homePrice">Home Price</label>
-                            <div class="input-group">
-                                <span class="input-prefix">$</span>
-                                <input type="number" id="homePrice" value="1100000" min="0" step="20000">
-                            </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label for="downPayment">Down Payment (%)</label>
-                            <input type="number" id="downPayment" value="25" min="0" max="100" step="0.5">
-                            <span class="info-text" id="downPaymentAmount">\$240,000</span>
-                        </div>
+                    <div class="form-group">
+                        <label for="downPayment">Down Payment (%)</label>
+                        <input type="number" id="downPayment" value="25" min="0" max="100" step="0.5">
+                        <span class="info-text" id="downPaymentAmount">\$240,000</span>
+                    </div>
 
-                        <div class="form-group">
-                            <label for="interestRate">Interest Rate (%)</label>
-                            <input type="number" id="interestRate" value="6.14" min="0" max="20" step="0.125">
-                        </div>
+                    <div class="form-group">
+                        <label for="interestRate">Interest Rate (%)</label>
+                        <input type="number" id="interestRate" value="6.14" min="0" max="20" step="0.125">
+                    </div>
 
-                        <div class="form-group">
-                            <label for="loanTerm">Loan Term (years)</label>
-                            <select id="loanTerm">
-                                <option value="15">15 years</option>
-                                <option value="20">20 years</option>
-                                <option value="30" selected>30 years</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="loanTerm">Loan Term (years)</label>
+                        <select id="loanTerm">
+                            <option value="15">15 years</option>
+                            <option value="20">20 years</option>
+                            <option value="30" selected>30 years</option>
+                        </select>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Other Budget Items -->
+        <div class="results-top-row">
+            <div class="total-result">
+                <div class="total-monthly-group">
+                    <div class="result-item grand-total">
+                        <span class="result-label">TOTAL MONTHLY COST</span>
+                        <span class="result-value" id="totalMonthly">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Net monthly cost</span>
+                        <span class="result-value" id="netMonthly">$0</span>
+                    </div>
+                    <div class="result-item" id="netMonthlySavingsRow">
+                        <span class="result-label">Net monthly savings</span>
+                        <span class="result-value" id="netMonthlySavings">$0</span>
+                    </div>
+                    <p class="info-text total-result-minimum-note" style="margin-top: 8px; opacity: 0.95;">Minimum savings needed: <span id="savingsThresholdDisplay">$0</span></p>
+                </div>
+                <div class="total-annual-group">
+                    <div class="result-item">
+                        <span class="result-label">Total annual cost</span>
+                        <span class="result-value" id="totalAnnual">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Net annual cost</span>
+                        <span class="result-value" id="netAnnual">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tax-break-card">
+                <h3 style="margin-bottom: 12px; color: #2d6a4f; font-size: 1.1em;">Tax break (est.)</h3>
+                <div class="result-item">
+                    <span class="result-label">Total tax break (monthly)</span>
+                    <span class="result-value" id="taxBreakTotal">$0</span>
+                </div>
+                <p class="info-text" style="margin: 8px 0 12px 0;">Tax break distribution</p>
+                <div class="result-item">
+                    <span class="result-label">Federal (mortgage interest + SALT)</span>
+                    <span class="result-value" id="taxBreakFederal">$0</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">State (interest + property tax)</span>
+                    <span class="result-value" id="taxBreakState">$0</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">SALT deduction (federal)</span>
+                    <span class="result-value" id="taxBreakSALT">$0</span>
+                </div>
+                <p class="info-text" style="margin-top: 10px; font-size: 0.8em;">Estimates assume itemized deductions. SALT capped at $40,400 (federal, 2026+). Loan limit $750k for interest. State: California.</p>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-container">
+                <h3 style="margin-bottom: 15px; color: #333;">Cost Distribution</h3>
+                <div id="chartBars" class="pie-chart-wrap"></div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Other Budget Items -->
                 <div class="toggle-section">
                     <div class="toggle-header" onclick="toggleSection('budget')">
                         <span><strong>📋 Other Budget Items</strong></span>
@@ -494,63 +583,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="results-section">
-                <div class="total-result">
-                    <div class="total-monthly-group">
-                        <div class="result-item grand-total">
-                            <span class="result-label">TOTAL MONTHLY COST</span>
-                            <span class="result-value" id="totalMonthly">$0</span>
-                        </div>
-                        <div class="result-item">
-                            <span class="result-label">Net monthly cost</span>
-                            <span class="result-value" id="netMonthly">$0</span>
-                        </div>
-                        <div class="result-item" id="netMonthlySavingsRow">
-                            <span class="result-label">Net monthly savings</span>
-                            <span class="result-value" id="netMonthlySavings">$0</span>
-                        </div>
-                    </div>
-                    <div class="total-annual-group">
-                        <div class="result-item">
-                            <span class="result-label">Total annual cost</span>
-                            <span class="result-value" id="totalAnnual">$0</span>
-                        </div>
-                        <div class="result-item">
-                            <span class="result-label">Net annual cost</span>
-                            <span class="result-value" id="netAnnual">$0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <h3 style="margin-bottom: 15px; color: #333;">Cost Distribution</h3>
-                    <div id="chartBars"></div>
-                </div>
-
-                <div class="tax-break-card">
-                    <h3 style="margin-bottom: 12px; color: #2d6a4f; font-size: 1.1em;">Tax break (est.)</h3>
-                    <div class="result-item">
-                        <span class="result-label">Total tax break (monthly)</span>
-                        <span class="result-value" id="taxBreakTotal">$0</span>
-                    </div>
-                    <p class="info-text" style="margin: 8px 0 12px 0;">Tax break distribution</p>
-                    <div class="result-item">
-                        <span class="result-label">Federal (mortgage interest + SALT)</span>
-                        <span class="result-value" id="taxBreakFederal">$0</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">State (interest + property tax)</span>
-                        <span class="result-value" id="taxBreakState">$0</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">SALT deduction (federal)</span>
-                        <span class="result-value" id="taxBreakSALT">$0</span>
-                    </div>
-                    <p class="info-text" style="margin-top: 10px; font-size: 0.8em;">Estimates assume itemized deductions. SALT capped at $40,400 (federal, 2026+). Loan limit $750k for interest. State: California.</p>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -702,6 +734,7 @@
             const netMonthlySavingsEl = document.getElementById('netMonthlySavings');
             netMonthlySavingsEl.textContent = formatCurrency(netMonthlySavings);
             netMonthlySavingsEl.classList.toggle('net-monthly-savings-negative', netMonthlySavings < savingsThreshold);
+            document.getElementById('savingsThresholdDisplay').textContent = formatCurrency(savingsThreshold);
 
             // Update chart
             updateChart({
@@ -718,31 +751,71 @@
             }, totalMonthly);
         }
 
-        // Update chart
+        // Pie chart colors (distinct palette)
+        const PIE_COLORS = ['#059669', '#047857', '#10b981', '#34d399', '#6ee7b7', '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e'];
+
+        // Update chart (pie chart)
         function updateChart(costs, total) {
             const chartContainer = document.getElementById('chartBars');
             chartContainer.innerHTML = '';
 
-            // Filter out zero values and sort by amount
             const sortedCosts = Object.entries(costs)
                 .filter(([_, amount]) => amount > 0)
                 .sort((a, b) => b[1] - a[1]);
 
-            sortedCosts.forEach(([label, amount]) => {
-                const percentage = (amount / total) * 100;
-                const barHtml = `
-                    <div class="chart-bar">
-                        <div class="chart-label">
-                            <span>${label}</span>
-                            <span>${formatCurrency(amount)} (${percentage.toFixed(1)}%)</span>
-                        </div>
-                        <div class="bar-wrapper">
-                            <div class="bar-fill" style="width: ${percentage}%"></div>
-                        </div>
-                    </div>
-                `;
-                chartContainer.innerHTML += barHtml;
+            if (sortedCosts.length === 0 || total === 0) {
+                chartContainer.innerHTML = '<p class="info-text">No cost data to display.</p>';
+                return;
+            }
+
+            const size = 220;
+            const cx = size / 2;
+            const cy = size / 2;
+            const r = Math.min(cx, cy) - 8;
+            let cumulativeAngle = 0;
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'pie-chart-svg');
+            svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+            svg.setAttribute('width', size);
+            svg.setAttribute('height', size);
+
+            sortedCosts.forEach(([label, amount], i) => {
+                const pct = amount / total;
+                const angle = pct * 360;
+                const startRad = (cumulativeAngle - 90) * Math.PI / 180;
+                const endRad = (cumulativeAngle + angle - 90) * Math.PI / 180;
+                const x1 = cx + r * Math.cos(startRad);
+                const y1 = cy + r * Math.sin(startRad);
+                const x2 = cx + r * Math.cos(endRad);
+                const y2 = cy + r * Math.sin(endRad);
+                const largeArc = angle > 180 ? 1 : 0;
+                const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathEl.setAttribute('d', path);
+                pathEl.setAttribute('fill', PIE_COLORS[i % PIE_COLORS.length]);
+                pathEl.setAttribute('stroke', '#fff');
+                pathEl.setAttribute('stroke-width', '1.5');
+                svg.appendChild(pathEl);
+                cumulativeAngle += angle;
             });
+
+            chartContainer.appendChild(svg);
+
+            const legend = document.createElement('div');
+            legend.className = 'pie-chart-legend';
+            sortedCosts.forEach(([label, amount], i) => {
+                const pct = total > 0 ? ((amount / total) * 100).toFixed(1) : 0;
+                const item = document.createElement('div');
+                item.className = 'pie-legend-item';
+                item.innerHTML = `
+                    <span class="pie-legend-swatch" style="background:${PIE_COLORS[i % PIE_COLORS.length]}"></span>
+                    <span class="pie-legend-label">${label}</span>
+                    <span class="pie-legend-value">${formatCurrency(amount)} (${pct}%)</span>
+                `;
+                legend.appendChild(item);
+            });
+            chartContainer.appendChild(legend);
         }
 
         // Initial calculation
