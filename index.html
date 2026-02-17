@@ -425,14 +425,14 @@
                     <span class="result-value" id="taxBreakFederal">$0</span>
                 </div>
                 <div class="result-item">
-                    <span class="result-label">State (interest + property tax)</span>
+                    <span class="result-label">State (interest + exemption)</span>
                     <span class="result-value" id="taxBreakState">$0</span>
                 </div>
                 <div class="result-item">
                     <span class="result-label">of which, SALT (federal)</span>
                     <span class="result-value" id="taxBreakSALT">$0</span>
                 </div>
-                <p class="info-text" style="margin-top: 10px; font-size: 0.8em;">Estimates assume itemized deductions. SALT capped at $40,400 (federal, 2026+). Loan limit $750k for interest. State: California.</p>
+                <p class="info-text" style="margin-top: 10px; font-size: 0.8em;">Estimates assume itemized deductions. SALT = property tax + state income tax (capped $40,400 federal, 2026+). Loan limit $750k for interest (federal &amp; CA). State savings: interest + exemption only.</p>
             </div>
         </div>
 
@@ -519,6 +519,24 @@
                             <input type="number" id="stateTaxRate" value="9.3" min="0" max="15" step="0.1">
                             <span class="info-text">California top bracket ~9.3% (13.3% with surcharge)</span>
                         </div>
+
+                        <div class="form-group">
+                            <label for="stateIncomeTax">State income tax (annual)</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="stateIncomeTax" value="35000" min="0" step="500">
+                            </div>
+                            <span class="info-text">Included in federal SALT deduction (with property tax, capped)</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stateExemption">State exemption (annual)</label>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="stateExemption" value="900" min="0" step="100">
+                            </div>
+                            <span class="info-text">e.g. CA exemption ~$900 for ~$7/mo savings at 9.3%</span>
+                        </div>
                     </div>
                 </div>
 
@@ -604,6 +622,8 @@
             pmi: document.getElementById('pmi'),
             federalTaxRate: document.getElementById('federalTaxRate'),
             stateTaxRate: document.getElementById('stateTaxRate'),
+            stateIncomeTax: document.getElementById('stateIncomeTax'),
+            stateExemption: document.getElementById('stateExemption'),
             hoa: document.getElementById('hoa'),
             utilities: document.getElementById('utilities'),
             internet: document.getElementById('internet'),
@@ -614,7 +634,10 @@
 
         // Add event listeners to all inputs
         Object.values(inputs).forEach(input => {
-            input.addEventListener('input', calculateMonthlyRate);
+            if (input) {
+                input.addEventListener('input', calculateMonthlyRate);
+                if (input.tagName === 'SELECT') input.addEventListener('change', calculateMonthlyRate);
+            }
         });
 
         // Toggle section function
@@ -708,15 +731,17 @@
             // Tax break estimate (itemized: mortgage interest + SALT, each counted once)
             const federalRate = (parseFloat(inputs.federalTaxRate.value) || 0) / 100;
             const stateRate = (parseFloat(inputs.stateTaxRate.value) || 0) / 100;
+            const stateIncomeTax = parseFloat(inputs.stateIncomeTax.value) || 0;
+            const stateExemption = parseFloat(inputs.stateExemption.value) || 0;
             const annualPropertyTax = homePrice * (propertyTaxRate / 100);
             const annualInterest = getAnnualMortgageInterest(loanAmount, interestRate, loanTerm);
             const deductibleInterest = loanAmount <= MORTGAGE_INTEREST_LOAN_CAP
                 ? annualInterest
                 : annualInterest * (MORTGAGE_INTEREST_LOAN_CAP / loanAmount);
-            const saltDeductible = Math.min(annualPropertyTax, SALT_CAP);
-            const federalSavings = (deductibleInterest + saltDeductible) * federalRate;  // SALT included once here
+            const saltDeductible = Math.min(annualPropertyTax + stateIncomeTax, SALT_CAP);
+            const federalSavings = (deductibleInterest + saltDeductible) * federalRate;
             const saltSavings = saltDeductible * federalRate;  // breakdown only; not added again to total
-            const stateSavings = (annualInterest + annualPropertyTax) * stateRate;
+            const stateSavings = (deductibleInterest + stateExemption) * stateRate;  // CA: interest (same $750k cap) + exemption only; no property tax on state
             const taxBreakAnnual = federalSavings + stateSavings;
             const taxBreakMonthly = taxBreakAnnual / 12;
 
