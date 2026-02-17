@@ -429,7 +429,7 @@
                     <span class="result-value" id="taxBreakState">$0</span>
                 </div>
                 <div class="result-item">
-                    <span class="result-label">SALT deduction (federal)</span>
+                    <span class="result-label">of which, SALT (federal)</span>
                     <span class="result-value" id="taxBreakSALT">$0</span>
                 </div>
                 <p class="info-text" style="margin-top: 10px; font-size: 0.8em;">Estimates assume itemized deductions. SALT capped at $40,400 (federal, 2026+). Loan limit $750k for interest. State: California.</p>
@@ -705,7 +705,7 @@
             document.getElementById('totalMonthly').textContent = formatCurrency(totalMonthly);
             document.getElementById('totalAnnual').textContent = formatCurrency(totalAnnual);
 
-            // Tax break estimate (itemized: mortgage interest + SALT)
+            // Tax break estimate (itemized: mortgage interest + SALT, each counted once)
             const federalRate = (parseFloat(inputs.federalTaxRate.value) || 0) / 100;
             const stateRate = (parseFloat(inputs.stateTaxRate.value) || 0) / 100;
             const annualPropertyTax = homePrice * (propertyTaxRate / 100);
@@ -714,8 +714,8 @@
                 ? annualInterest
                 : annualInterest * (MORTGAGE_INTEREST_LOAN_CAP / loanAmount);
             const saltDeductible = Math.min(annualPropertyTax, SALT_CAP);
-            const federalSavings = (deductibleInterest + saltDeductible) * federalRate;
-            const saltSavings = saltDeductible * federalRate;
+            const federalSavings = (deductibleInterest + saltDeductible) * federalRate;  // SALT included once here
+            const saltSavings = saltDeductible * federalRate;  // breakdown only; not added again to total
             const stateSavings = (annualInterest + annualPropertyTax) * stateRate;
             const taxBreakAnnual = federalSavings + stateSavings;
             const taxBreakMonthly = taxBreakAnnual / 12;
