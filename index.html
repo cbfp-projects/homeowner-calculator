@@ -357,7 +357,7 @@
                         <label for="homePrice">Home Price</label>
                         <div class="input-group">
                             <span class="input-prefix">$</span>
-                            <input type="number" id="homePrice" value="1100000" min="0" step="20000">
+                            <input type="number" id="homePrice" value="1300000" min="0" step="20000">
                         </div>
                     </div>
 
@@ -583,7 +583,7 @@
                     <div class="toggle-content active" id="section-maintenance">
                         <div class="form-group">
                             <label for="maintenanceRate">Maintenance (% of home value annually)</label>
-                            <input type="number" id="maintenanceRate" value="3" min="0" max="5" step="0.1">
+                            <input type="number" id="maintenanceRate" value="1" min="0" max="5" step="0.1">
                             <span class="info-text">Typical: 3% of home value per year</span>
                         </div>
 
@@ -682,12 +682,15 @@
             return yearInterest;
         }
 
-        // Format currency
+        // Format currency with commas for thousands
         function formatCurrency(amount) {
-            return '$' + amount.toLocaleString('en-US', {
+            const n = Math.abs(amount);
+            const s = n.toLocaleString('en-US', {
                 minimumFractionDigits: 0,
-                maximumFractionDigits: 0
+                maximumFractionDigits: 0,
+                useGrouping: true
             });
+            return amount < 0 ? '-$' + s : '$' + s;
         }
 
         // Calculate and display monthly rate
