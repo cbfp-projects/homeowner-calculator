@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homeowner Monthly Rate Estimator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
         * {
             margin: 0;
@@ -253,6 +254,10 @@
             grid-template-columns: 1fr 1fr;
         }
 
+        #section-rate-map.toggle-content.active {
+            display: block;
+        }
+
         .toggle-content.active .form-group {
             margin-bottom: 0;
         }
@@ -388,6 +393,126 @@
             opacity: 1;
         }
 
+        .rate-map-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        #bayAreaRateMap {
+            min-height: 420px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #eef2f7;
+        }
+
+        .rate-map-panel {
+            border: 1px solid #d1fae5;
+            border-radius: 12px;
+            background: #f8fffb;
+            padding: 18px;
+        }
+
+        .rate-map-panel h3 {
+            color: #065f46;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .rate-map-status {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-bottom: 14px;
+        }
+
+        .rate-map-selector {
+            margin-bottom: 14px;
+        }
+
+        .rate-map-selector label {
+            min-height: 0;
+            font-size: 0.9em;
+        }
+
+        .selected-rate-card {
+            padding: 14px;
+            border-radius: 10px;
+            background: white;
+            border: 1px solid #d1d5db;
+            margin-bottom: 14px;
+        }
+
+        .selected-rate-city {
+            color: #111827;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .selected-rate-value {
+            color: #047857;
+            font-size: 2em;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .rate-map-button {
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+            padding: 12px 14px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .rate-map-button:hover:not(:disabled) {
+            box-shadow: 0 8px 18px rgba(5, 150, 105, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .rate-map-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        .rate-map-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 16px;
+            font-size: 0.86em;
+            color: #374151;
+        }
+
+        .rate-map-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rate-map-legend-swatch {
+            width: 18px;
+            height: 14px;
+            border-radius: 4px;
+            border: 1px solid rgba(17, 24, 39, 0.15);
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .rate-map-layout {
+                grid-template-columns: 1fr;
+            }
+
+            #bayAreaRateMap {
+                min-height: 340px;
+            }
+        }
+
         .info-tooltip {
             position: relative;
             display: inline-flex;
@@ -494,6 +619,36 @@
                             <option value="20">20 years</option>
                             <option value="30" selected>30 years</option>
                         </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toggle-section">
+                <div class="toggle-header" onclick="toggleSection('rate-map')">
+                    <span><strong>Regional Rate Map</strong></span>
+                    <span class="toggle-icon" id="icon-rate-map">▼</span>
+                </div>
+                <div class="toggle-content" id="section-rate-map">
+                    <div class="rate-map-layout">
+                        <div id="bayAreaRateMap" aria-label="Bay Area, Skyline, and Santa Cruz Mountains mortgage-rate estimate map"></div>
+                        <aside class="rate-map-panel" aria-live="polite">
+                            <h3>Area rate estimate</h3>
+                            <p class="rate-map-status" id="rateMapStatus">Loading regional rate estimates...</p>
+                            <div class="form-group rate-map-selector">
+                                <label for="rateMapAreaSelect">Choose an area</label>
+                                <select id="rateMapAreaSelect" disabled>
+                                    <option value="">Select an area</option>
+                                </select>
+                            </div>
+                            <div class="selected-rate-card">
+                                <div class="selected-rate-city" id="selectedRateCity">Select an area</div>
+                                <div class="selected-rate-value" id="selectedRateValue">--</div>
+                                <p class="info-text" id="selectedRateMeta">Click a shaded city or district on the map to view its estimate.</p>
+                            </div>
+                            <button class="rate-map-button" id="applySelectedRate" type="button" disabled>Apply to calculator</button>
+                            <div class="rate-map-legend" id="rateMapLegend"></div>
+                            <p class="info-text" style="margin-top: 14px;">Incorporated areas use official California city/town limits; unincorporated mountain areas use approximate point markers. Estimates are manually maintained and are not lender quotes.</p>
+                        </aside>
                     </div>
                 </div>
             </div>
@@ -755,6 +910,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // Get all input elements
         const inputs = {
@@ -798,6 +954,10 @@
             
             section.classList.toggle('active');
             icon.classList.toggle('active');
+
+            if (sectionName === 'rate-map' && section.classList.contains('active') && rateMapInstance) {
+                setTimeout(refreshRateMapView, 0);
+            }
         }
 
         // Calculate monthly mortgage payment
@@ -1282,8 +1442,308 @@
             }
         }
 
+        const RATE_MAP_COLORS = ['#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399', '#10b981', '#047857'];
+        const RATE_MAP_NO_DATA_COLOR = '#e5e7eb';
+        const RATE_MAP_DATA_VERSION = '2026-04-24-peninsula-points';
+        let rateMapInstance = null;
+        let selectedRateEstimate = null;
+        let selectedRateLayer = null;
+        let rateMapGeoJsonLayer = null;
+        let rateMapAllBounds = null;
+        let rateMapLayersByCity = new Map();
+        let rateMapEstimatesByCity = new Map();
+
+        function normalizeCityName(city) {
+            return String(city || '').trim().toLowerCase();
+        }
+
+        function isApproximateRateMapBoundary(feature) {
+            return String(feature?.properties?.boundaryType || '').toLowerCase().includes('approximate');
+        }
+
+        function isRateMapPointFeature(feature) {
+            return feature?.geometry?.type === 'Point';
+        }
+
+        function isRateMapSectionActive() {
+            return document.getElementById('section-rate-map')?.classList.contains('active');
+        }
+
+        function refreshRateMapView() {
+            if (!rateMapInstance) return;
+
+            rateMapInstance.invalidateSize();
+
+            const selectedBounds = getRateMapLayerBounds(selectedRateLayer);
+            const bounds = selectedBounds || rateMapAllBounds;
+            if (!bounds || (bounds.isValid && !bounds.isValid())) return;
+
+            const options = selectedBounds
+                ? { padding: [30, 30], maxZoom: 11 }
+                : { padding: [20, 20] };
+            rateMapInstance.fitBounds(bounds, options);
+        }
+
+        function getRateMapLayerBounds(layer) {
+            if (!layer) return null;
+            if (layer.getBounds) return layer.getBounds();
+            if (layer.getLatLng && typeof L !== 'undefined') return L.latLngBounds([layer.getLatLng()]);
+            return null;
+        }
+
+        function formatRate(rate) {
+            return `${Number(rate).toFixed(3).replace(/0+$/, '').replace(/\.$/, '')}%`;
+        }
+
+        function getRateColor(rate, minRate, maxRate) {
+            if (typeof rate !== 'number' || Number.isNaN(rate)) return RATE_MAP_NO_DATA_COLOR;
+            if (maxRate <= minRate) return RATE_MAP_COLORS[Math.floor(RATE_MAP_COLORS.length / 2)];
+            const pct = (rate - minRate) / (maxRate - minRate);
+            const idx = Math.max(0, Math.min(RATE_MAP_COLORS.length - 1, Math.floor(pct * RATE_MAP_COLORS.length)));
+            return RATE_MAP_COLORS[idx];
+        }
+
+        function setRateMapStatus(message) {
+            const status = document.getElementById('rateMapStatus');
+            if (status) status.textContent = message;
+        }
+
+        function renderRateMapLegend(minRate, maxRate, lastUpdated, loanType) {
+            const legend = document.getElementById('rateMapLegend');
+            if (!legend) return;
+
+            const range = maxRate - minRate;
+            const items = RATE_MAP_COLORS.map((color, idx) => {
+                const start = minRate + (range * idx / RATE_MAP_COLORS.length);
+                const end = minRate + (range * (idx + 1) / RATE_MAP_COLORS.length);
+                const label = idx === RATE_MAP_COLORS.length - 1
+                    ? `${formatRate(start)}+`
+                    : `${formatRate(start)} - ${formatRate(end)}`;
+                return `
+                    <div class="rate-map-legend-item">
+                        <span class="rate-map-legend-swatch" style="background:${color}"></span>
+                        <span>${label}</span>
+                    </div>
+                `;
+            }).join('');
+
+            legend.innerHTML = `
+                <strong>Estimated ${loanType || 'mortgage'} rate</strong>
+                ${items}
+                <div class="rate-map-legend-item">
+                    <span class="rate-map-legend-swatch" style="background:${RATE_MAP_NO_DATA_COLOR}"></span>
+                    <span>No estimate</span>
+                </div>
+                <p class="info-text">Last updated: ${lastUpdated || 'unknown'}</p>
+            `;
+        }
+
+        function updateSelectedRate(city, estimate, boundaryType) {
+            const cityEl = document.getElementById('selectedRateCity');
+            const valueEl = document.getElementById('selectedRateValue');
+            const metaEl = document.getElementById('selectedRateMeta');
+            const applyButton = document.getElementById('applySelectedRate');
+
+            selectedRateEstimate = estimate || null;
+            if (cityEl) cityEl.textContent = city || 'Select an area';
+
+            if (estimate && typeof estimate.rate === 'number') {
+                if (valueEl) valueEl.textContent = formatRate(estimate.rate);
+                if (metaEl) {
+                    const rateNote = estimate.note || estimate.estimateBasis || '';
+                    const boundaryLabel = boundaryType ? `Boundary: ${boundaryType}.` : '';
+                    metaEl.textContent = [`${estimate.loanType || 'Mortgage'} estimate.`, rateNote, boundaryLabel]
+                        .filter(Boolean)
+                        .join(' ');
+                }
+                if (applyButton) applyButton.disabled = false;
+                return;
+            }
+
+            if (valueEl) valueEl.textContent = '--';
+            if (metaEl) metaEl.textContent = 'No manually maintained rate estimate is available for this area yet.';
+            if (applyButton) applyButton.disabled = true;
+        }
+
+        function applySelectedRateToCalculator() {
+            if (!selectedRateEstimate || typeof selectedRateEstimate.rate !== 'number') return;
+            inputs.interestRate.value = selectedRateEstimate.rate.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+            calculateMonthlyRate();
+            inputs.interestRate.focus();
+        }
+
+        function selectRateMapArea(city) {
+            const layer = rateMapLayersByCity.get(normalizeCityName(city));
+            if (!layer) return;
+
+            if (selectedRateLayer && rateMapGeoJsonLayer) {
+                rateMapGeoJsonLayer.resetStyle(selectedRateLayer);
+                if (selectedRateLayer.setRadius) selectedRateLayer.setRadius(8);
+            }
+
+            const estimate = rateMapEstimatesByCity.get(normalizeCityName(city));
+            const boundaryType = layer.feature?.properties?.boundaryType;
+            const isApproximate = isApproximateRateMapBoundary(layer.feature);
+            selectedRateLayer = layer;
+            layer.setStyle({
+                weight: isApproximate ? 4 : 3,
+                fillOpacity: estimate ? (isRateMapPointFeature(layer.feature) ? 1 : 0.88) : 0.5
+            });
+            if (layer.setRadius) layer.setRadius(10);
+            if (layer.bringToFront) layer.bringToFront();
+            updateSelectedRate(city, estimate, boundaryType);
+
+            const bounds = getRateMapLayerBounds(layer);
+            if (rateMapInstance && bounds) {
+                rateMapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 11 });
+            }
+        }
+
+        function populateRateMapAreaSelect(features) {
+            const select = document.getElementById('rateMapAreaSelect');
+            if (!select) return;
+
+            const cities = features
+                .map((feature) => feature.properties?.city)
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b));
+
+            select.innerHTML = '<option value="">Select an area</option>' +
+                cities.map((city) => `<option value="${city}">${city}</option>`).join('');
+            select.disabled = false;
+            select.addEventListener('change', () => {
+                if (select.value) selectRateMapArea(select.value);
+            });
+        }
+
+        async function initializeRateMap() {
+            const mapEl = document.getElementById('bayAreaRateMap');
+            const applyButton = document.getElementById('applySelectedRate');
+            if (applyButton) applyButton.addEventListener('click', applySelectedRateToCalculator);
+            if (!mapEl) return;
+
+            if (typeof L === 'undefined') {
+                setRateMapStatus('Map library unavailable. Check your network connection and reload.');
+                return;
+            }
+
+            try {
+                const [ratesResponse, geoResponse] = await Promise.all([
+                    fetch(`data/bay-area-city-rates.json?v=${RATE_MAP_DATA_VERSION}`),
+                    fetch(`data/bay-area-cities.geojson?v=${RATE_MAP_DATA_VERSION}`)
+                ]);
+
+                if (!ratesResponse.ok || !geoResponse.ok) {
+                    throw new Error('Unable to load one or more map data files.');
+                }
+
+                const rateData = await ratesResponse.json();
+                const cityGeoJson = await geoResponse.json();
+                const estimatesByCity = new Map(
+                    (rateData.rates || []).map((estimate) => [
+                        normalizeCityName(estimate.city),
+                        {
+                            ...estimate,
+                            loanType: rateData.loanType,
+                            estimateBasis: rateData.estimateBasis,
+                            lastUpdated: rateData.lastUpdated
+                        }
+                    ])
+                );
+                rateMapEstimatesByCity = estimatesByCity;
+                const rates = Array.from(estimatesByCity.values())
+                    .map((estimate) => estimate.rate)
+                    .filter((rate) => typeof rate === 'number' && !Number.isNaN(rate));
+                const minRate = Math.min(...rates);
+                const maxRate = Math.max(...rates);
+
+                rateMapInstance = L.map(mapEl, {
+                    center: [37.58, -122.08],
+                    zoom: 9,
+                    scrollWheelZoom: false
+                });
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(rateMapInstance);
+
+                rateMapInstance.createPane('rateMapApproximatePane');
+                rateMapInstance.getPane('rateMapApproximatePane').style.zIndex = 430;
+
+                function styleFeature(feature) {
+                    const city = feature.properties?.city;
+                    const estimate = estimatesByCity.get(normalizeCityName(city));
+                    const isApproximate = isApproximateRateMapBoundary(feature);
+                    return {
+                        pane: isApproximate ? 'rateMapApproximatePane' : 'overlayPane',
+                        color: isApproximate ? '#7c2d12' : '#064e3b',
+                        weight: isApproximate ? 2 : 1,
+                        opacity: isApproximate ? 1 : 0.9,
+                        fillColor: getRateColor(estimate?.rate, minRate, maxRate),
+                        fillOpacity: estimate ? (isRateMapPointFeature(feature) ? 0.95 : 0.72) : 0.4
+                    };
+                }
+
+                const geoJsonLayer = L.geoJSON(cityGeoJson, {
+                    style: styleFeature,
+                    pointToLayer: (feature, latlng) => {
+                        return L.circleMarker(latlng, {
+                            ...styleFeature(feature),
+                            radius: 8
+                        });
+                    },
+                    onEachFeature: (feature, layer) => {
+                        const city = feature.properties?.city || 'Unknown city';
+                        const boundaryType = feature.properties?.boundaryType;
+                        const estimate = estimatesByCity.get(normalizeCityName(city));
+                        const label = estimate
+                            ? `${city}: ${formatRate(estimate.rate)}`
+                            : `${city}: no estimate`;
+
+                        layer.bindTooltip(label, { sticky: true });
+                        rateMapLayersByCity.set(normalizeCityName(city), layer);
+                        layer.on({
+                            click: () => {
+                                const select = document.getElementById('rateMapAreaSelect');
+                                if (select) select.value = city;
+                                selectRateMapArea(city);
+                            },
+                            mouseover: () => {
+                                if (layer !== selectedRateLayer) {
+                                    layer.setStyle({
+                                        weight: isApproximateRateMapBoundary(feature) ? 3 : 2
+                                    });
+                                    if (layer.setRadius) layer.setRadius(9);
+                                    if (layer.bringToFront) layer.bringToFront();
+                                }
+                            },
+                            mouseout: () => {
+                                if (layer !== selectedRateLayer) {
+                                    geoJsonLayer.resetStyle(layer);
+                                    if (layer.setRadius) layer.setRadius(8);
+                                }
+                            }
+                        });
+                    }
+                }).addTo(rateMapInstance);
+                rateMapGeoJsonLayer = geoJsonLayer;
+
+                rateMapAllBounds = geoJsonLayer.getBounds();
+                if (isRateMapSectionActive()) {
+                    setTimeout(refreshRateMapView, 0);
+                }
+                populateRateMapAreaSelect(cityGeoJson.features || []);
+                renderRateMapLegend(minRate, maxRate, rateData.lastUpdated, rateData.loanType);
+                setRateMapStatus(`${rateData.rates?.length || 0} regional estimates loaded.`);
+            } catch (error) {
+                console.error(error);
+                setRateMapStatus('Unable to load the rate map data. If opening the file directly, serve the folder locally so JSON files can be fetched.');
+            }
+        }
+
         // Initial calculation
         calculateMonthlyRate();
+        initializeRateMap();
     </script>
 </body>
 </html>
