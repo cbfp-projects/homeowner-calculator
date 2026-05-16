@@ -8,3 +8,36 @@
 - [Claude chat to generate initial HTML code](https://aiplayground-prod2.stanford.edu/share/1ZP0vqYvgc-tZZmNP39Tg)
 - [Gemini chat for Cloudflare deployment](https://share.google/aimode/UAjsZqyRDyK52DXaT)
   - [CLoudflare project](https://dash.cloudflare.com/97dc994edc7b5332da64db25d9fe827d/pages/view/homeowner-calculator)
+
+
+## Daily mortgage rate automation
+
+A GitHub Actions workflow now automates city-rate refreshes:
+
+- Workflow: `.github/workflows/daily-rate-update.yml`
+- Schedule: daily (plus manual `workflow_dispatch`)
+- Source: FRED `MORTGAGE30US` CSV feed
+- Updater script: `scripts/update_bay_area_rates.py`
+
+### Update method
+
+- Fetch latest non-empty FRED `MORTGAGE30US` observation.
+- Compute the median of current Bay Area city rates.
+- Shift every city rate by `(latest_source_rate - current_median)` to preserve city spread while tracking the latest national baseline.
+- Update `lastUpdated`, `estimateBasis`, and `source` metadata.
+- Update `RATE_MAP_DATA_VERSION` in `index.html` for cache-busting.
+
+### Safety and validation
+
+- Source outage guardrail: if the source is unreachable or empty, the script logs a skip and exits without changing files.
+- Workflow validation includes:
+  - JSON shape checks for `data/bay-area-city-rates.json`
+  - Existing Python unit tests (`python -m unittest -v`)
+
+### Manual run
+
+You can run the updater locally:
+
+```bash
+python scripts/update_bay_area_rates.py
+```

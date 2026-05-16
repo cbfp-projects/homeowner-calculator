@@ -1,0 +1,71 @@
+name: Daily rate update
+
+on:
+  schedule:
+    - cron: '20 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-rates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version: '3.12'
+
+      - name: Update Bay Area city rates
+        run: python scripts/update_bay_area_rates.py
+
+      - name: Validate rate JSON shape
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('data/bay-area-city-rates.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+
+          assert isinstance(data, dict), 'Root must be an object'
+          assert isinstance(data.get('lastUpdated'), str) and data['lastUpdated'], 'lastUpdated is required'
+          assert isinstance(data.get('loanType'), str) and data['loanType'], 'loanType is required'
+          assert isinstance(data.get('estimateBasis'), str) and data['estimateBasis'], 'estimateBasis is required'
+          assert isinstance(data.get('rates'), list) and data['rates'], 'rates must be a non-empty array'
+
+          for idx, entry in enumerate(data['rates']):
+              assert isinstance(entry, dict), f'rates[{idx}] must be object'
+              assert isinstance(entry.get('city'), str) and entry['city'], f'rates[{idx}].city invalid'
+              assert isinstance(entry.get('rate'), (int, float)), f'rates[{idx}].rate invalid'
+          print('JSON shape validation passed')
+          PY
+
+      - name: Run tests
+        run: python -m unittest -v
+
+      - name: Create or update pull request
+        uses: peter-evans/create-pull-request@v7.0.5
+        with:
+          commit-message: 'chore: refresh bay area rates data'
+          title: 'chore: daily bay area mortgage rate refresh'
+          body: |
+            ## Summary
+            - Run the daily mortgage rate refresh automation.
+            - Update `data/bay-area-city-rates.json` using latest FRED MORTGAGE30US value.
+            - Update `RATE_MAP_DATA_VERSION` cache-busting constant in `index.html`.
+
+            ## Validation
+            - JSON shape validation
+            - `python -m unittest -v`
+          branch: automation/daily-rate-update
+          delete-branch: true
+          labels: |
+            automation
+            rates
