@@ -39,5 +39,5 @@ A GitHub Actions workflow now automates city-rate refreshes:
 You can run the updater locally:
 
 ```bash
-python /home/runner/work/homeowner-calculator/homeowner-calculator/scripts/update_bay_area_rates.py
+python scripts/update_bay_area_rates.py
 ```
