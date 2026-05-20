@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   update-rates:
@@ -50,22 +49,25 @@ jobs:
       - name: Run tests
         run: python -m unittest -v
 
-      - name: Create or update pull request
-        uses: peter-evans/create-pull-request@v7.0.5
-        with:
-          commit-message: 'chore: refresh bay area rates data'
-          title: 'chore: daily bay area mortgage rate refresh'
-          body: |
-            ## Summary
-            - Run the daily mortgage rate refresh automation.
-            - Update `data/bay-area-city-rates.json` using latest FRED MORTGAGE30US value.
-            - Update `RATE_MAP_DATA_VERSION` cache-busting constant in `index.html`.
+      - name: Commit refreshed rates
+        run: |
+          if git diff --quiet -- data/bay-area-city-rates.json index.html; then
+            echo "No rate changes to commit"
+            {
+              echo "## Daily rate update"
+              echo
+              echo "- No file changes were produced by the refresh run."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
 
-            ## Validation
-            - JSON shape validation
-            - `python -m unittest -v`
-          branch: automation/daily-rate-update
-          delete-branch: true
-          labels: |
-            automation
-            rates
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/bay-area-city-rates.json index.html
+          git commit -m "chore: refresh bay area rates data"
+          git push
+          {
+            echo "## Daily rate update"
+            echo
+            echo "- Refreshed rate data was committed to the default branch."
+          } >> "$GITHUB_STEP_SUMMARY"
