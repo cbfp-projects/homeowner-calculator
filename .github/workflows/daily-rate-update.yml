@@ -53,6 +53,11 @@ jobs:
         run: |
           if git diff --quiet -- data/bay-area-city-rates.json index.html; then
             echo "No rate changes to commit"
+            {
+              echo "## Daily rate update"
+              echo
+              echo "- No file changes were produced by the refresh run."
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
@@ -61,3 +66,8 @@ jobs:
           git add data/bay-area-city-rates.json index.html
           git commit -m "chore: refresh bay area rates data"
           git push
+          {
+            echo "## Daily rate update"
+            echo
+            echo "- Refreshed rate data was committed to the default branch."
+          } >> "$GITHUB_STEP_SUMMARY"
