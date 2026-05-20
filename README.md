@@ -18,6 +18,7 @@ A GitHub Actions workflow now automates city-rate refreshes:
 - Schedule: daily (plus manual `workflow_dispatch`)
 - Source: FRED `MORTGAGE30US` CSV feed
 - Updater script: `scripts/update_bay_area_rates.py`
+- Deployment behavior: validated rate changes are committed directly to the default branch so the published site stays current without a manual merge step
 
 ### Update method
 
