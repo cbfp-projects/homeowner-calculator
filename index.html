@@ -1571,6 +1571,7 @@
             const yFor = (v) => margin.top + innerH - ((v - minY) / (maxY - minY)) * innerH;
 
             function formatDateLabel(dateStr) {
+                if (typeof dateStr !== 'string' || !/^\d{4}-\d{2}$/.test(dateStr)) return dateStr || '';
                 const [year, month] = dateStr.split('-');
                 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 return `${months[parseInt(month, 10) - 1]} '${year.slice(2)}`;
@@ -1592,9 +1593,10 @@
             svgParts.push(`<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + innerH}" stroke="#d4d4d4" stroke-width="1"/>`);
             svgParts.push(`<line x1="${margin.left}" y1="${margin.top + innerH}" x2="${margin.left + innerW}" y2="${margin.top + innerH}" stroke="#d4d4d4" stroke-width="1"/>`);
 
-            // X-axis labels (show every other month to avoid crowding)
+            // Show a label every N months to prevent crowding on the x-axis
+            const X_LABEL_FREQUENCY = 3;
             history.forEach((d, i) => {
-                if (i % 3 === 0 || i === n - 1) {
+                if (i % X_LABEL_FREQUENCY === 0 || i === n - 1) {
                     const x = xFor(i);
                     svgParts.push(`<line x1="${x}" y1="${margin.top + innerH}" x2="${x}" y2="${margin.top + innerH + 4}" stroke="#9ca3af" stroke-width="1"/>`);
                     svgParts.push(`<text x="${x}" y="${margin.top + innerH + 17}" text-anchor="middle" font-size="10" fill="#6b7280">${formatDateLabel(d.date)}</text>`);
