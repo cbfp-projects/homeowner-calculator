@@ -1628,9 +1628,10 @@
             }
 
             try {
+                const cacheBuster = Date.now();
                 const [ratesResponse, geoResponse] = await Promise.all([
-                    fetch(`data/bay-area-city-rates.json?v=${RATE_MAP_DATA_VERSION}`),
-                    fetch(`data/bay-area-cities.geojson?v=${RATE_MAP_DATA_VERSION}`)
+                    fetch(`data/bay-area-city-rates.json?v=${RATE_MAP_DATA_VERSION}&t=${cacheBuster}`),
+                    fetch(`data/bay-area-cities.geojson?v=${RATE_MAP_DATA_VERSION}&t=${cacheBuster}`)
                 ]);
 
                 if (!ratesResponse.ok || !geoResponse.ok) {
