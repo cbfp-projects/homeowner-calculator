@@ -5,30 +5,33 @@ Source:
 - FRED series MORTGAGE30US (30-Year Fixed Rate Mortgage Average in the United States)
 
 Method:
-- Fetch latest non-empty observation from FRED CSV endpoint.
+- Fetch latest non-empty observation from FRED REST API (JSON).
 - Compute current city-rate median.
 - Shift each city rate by (latest_source_rate - current_median), preserving relative spreads.
 - Update metadata fields and cache-busting version in index.html.
 
 Guardrails:
+- Requires FRED_API_KEY environment variable (free key from https://fred.stlouisfed.org/docs/api/api_key.html).
 - If source fetch fails or source data is unavailable, log and exit without modifying files.
 - Validate JSON shape before modifying.
 """
 
 from __future__ import annotations
 
-import csv
 import datetime as dt
 import json
+import os
 import re
 import statistics
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from urllib.error import URLError
+from urllib.parse import urlencode
 from urllib.request import urlopen
 
-FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US"
+FRED_API_BASE = "https://api.stlouisfed.org/fred/series/observations"
+FRED_SERIES_ID = "MORTGAGE30US"
 DEFAULT_DATA_PATH = Path("data/bay-area-city-rates.json")
 DEFAULT_INDEX_PATH = Path("index.html")
 VERSION_SUFFIX = "daily-rate-refresh"
@@ -65,20 +68,44 @@ def validate_rate_data(data: dict) -> list[dict]:
 
 
 def fetch_latest_rate() -> tuple[dt.date, float]:
+    api_key = os.environ.get("FRED_API_KEY", "").strip()
+    if not api_key:
+        print("[skip] FRED_API_KEY environment variable is not set")
+        raise RuntimeError("source_unavailable")
+
+    params = urlencode({
+        "series_id": FRED_SERIES_ID,
+        "api_key": api_key,
+        "file_type": "json",
+        "sort_order": "desc",
+        "limit": 10,  # fetch a few to find the latest non-missing value
+    })
+    url = f"{FRED_API_BASE}?{params}"
+
     try:
-        with urlopen(FRED_CSV_URL, timeout=20) as response:
+        with urlopen(url, timeout=20) as response:
             content = response.read().decode("utf-8")
     except (URLError, TimeoutError, OSError) as exc:
-        print(f"[skip] Could not reach rate source ({FRED_CSV_URL}): {exc}")
+        print(f"[skip] Could not reach FRED API: {exc}")
         raise RuntimeError("source_unavailable") from exc
+
+    try:
+        payload = json.loads(content)
+    except json.JSONDecodeError as exc:
+        print(f"[skip] FRED API returned invalid JSON: {exc}")
+        raise RuntimeError("source_unavailable") from exc
+
+    observations = payload.get("observations")
+    if not isinstance(observations, list) or not observations:
+        print("[skip] No observations found in FRED API response")
+        raise RuntimeError("source_unavailable")
 
     latest_date: dt.date | None = None
     latest_value: float | None = None
 
-    reader = csv.DictReader(content.splitlines())
-    for row in reader:
-        date_text = (row.get("DATE") or "").strip()
-        value_text = (row.get("MORTGAGE30US") or "").strip()
+    for obs in observations:
+        date_text = (obs.get("date") or "").strip()
+        value_text = (obs.get("value") or "").strip()
         if not date_text or value_text in {"", "."}:
             continue
 
@@ -93,7 +120,7 @@ def fetch_latest_rate() -> tuple[dt.date, float]:
             latest_value = obs_value
 
     if latest_date is None or latest_value is None:
-        print("[skip] No usable observations found in source feed")
+        print("[skip] No usable observations found in FRED API response")
         raise RuntimeError("source_unavailable")
 
     return latest_date, latest_value
@@ -154,7 +181,7 @@ def update_rates(data_path: Path, index_path: Path) -> int:
     updated_data["source"] = {
         "name": "FRED",
         "series": "MORTGAGE30US",
-        "url": FRED_CSV_URL,
+        "url": f"{FRED_API_BASE}?series_id={FRED_SERIES_ID}",
         "observationDate": source_date.isoformat(),
         "retrievedAtUtc": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
     }
