@@ -89,7 +89,7 @@
     },
     {
       "city": "Brisbane",
-      "rate": 6.56,
+      "rate": 6.55,
       "note": "Manual estimate"
     },
     {
@@ -99,22 +99,22 @@
     },
     {
       "city": "South San Francisco",
-      "rate": 6.56,
+      "rate": 6.55,
       "note": "Manual estimate"
     },
     {
       "city": "Pacifica",
-      "rate": 6.59,
+      "rate": 6.58,
       "note": "Manual estimate"
     },
     {
       "city": "San Bruno",
-      "rate": 6.56,
+      "rate": 6.55,
       "note": "Manual estimate"
     },
     {
       "city": "Millbrae",
-      "rate": 6.55,
+      "rate": 6.54,
       "note": "Manual estimate"
     },
     {
@@ -144,12 +144,12 @@
     },
     {
       "city": "San Carlos",
-      "rate": 6.52,
+      "rate": 6.51,
       "note": "Manual estimate"
     },
     {
       "city": "Redwood City",
-      "rate": 6.52,
+      "rate": 6.51,
       "note": "Manual estimate"
     },
     {
@@ -169,7 +169,7 @@
     },
     {
       "city": "Woodside",
-      "rate": 6.51,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
@@ -194,7 +194,7 @@
     },
     {
       "city": "Mountain View",
-      "rate": 6.47,
+      "rate": 6.46,
       "note": "Manual estimate"
     },
     {
@@ -209,7 +209,7 @@
     },
     {
       "city": "Saratoga",
-      "rate": 6.47,
+      "rate": 6.46,
       "note": "Manual estimate"
     },
     {
@@ -224,7 +224,7 @@
     },
     {
       "city": "Campbell",
-      "rate": 6.51,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
@@ -234,7 +234,7 @@
     },
     {
       "city": "San Jose",
-      "rate": 6.55,
+      "rate": 6.54,
       "note": "Manual estimate"
     },
     {
@@ -244,7 +244,7 @@
     },
     {
       "city": "Fremont",
-      "rate": 6.56,
+      "rate": 6.55,
       "note": "Manual estimate"
     },
     {
@@ -254,7 +254,7 @@
     },
     {
       "city": "Oakland",
-      "rate": 6.51,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
@@ -264,12 +264,12 @@
     },
     {
       "city": "Walnut Creek",
-      "rate": 6.52,
+      "rate": 6.51,
       "note": "Manual estimate"
     },
     {
       "city": "Half Moon Bay",
-      "rate": 6.6,
+      "rate": 6.59,
       "note": "Manual estimate"
     },
     {
@@ -279,7 +279,7 @@
     },
     {
       "city": "La Honda",
-      "rate": 6.63,
+      "rate": 6.62,
       "note": "Manual estimate"
     },
     {
@@ -289,7 +289,7 @@
     },
     {
       "city": "Ben Lomond",
-      "rate": 6.64,
+      "rate": 6.63,
       "note": "Manual estimate"
     },
     {
@@ -299,7 +299,7 @@
     },
     {
       "city": "Scotts Valley",
-      "rate": 6.59,
+      "rate": 6.58,
       "note": "Manual estimate"
     },
     {
@@ -309,7 +309,7 @@
     },
     {
       "city": "Capitola",
-      "rate": 6.6,
+      "rate": 6.59,
       "note": "Manual estimate"
     },
     {
@@ -323,6 +323,6 @@
     "series": "MORTGAGE30US",
     "url": "https://api.stlouisfed.org/fred/series/observations?series_id=MORTGAGE30US",
     "observationDate": "2026-05-28",
-    "retrievedAtUtc": "2026-06-02T02:06:59Z"
+    "retrievedAtUtc": "2026-06-02T18:12:03Z"
   }
 }
