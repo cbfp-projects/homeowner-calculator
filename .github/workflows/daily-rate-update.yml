@@ -22,6 +22,8 @@ jobs:
           python-version: '3.12'
 
       - name: Update Bay Area city rates
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python scripts/update_bay_area_rates.py
 
       - name: Validate rate JSON shape
