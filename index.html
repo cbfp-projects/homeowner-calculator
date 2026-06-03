@@ -765,12 +765,19 @@
                 <h3 style="margin-bottom: 10px; color: #333;">Cost over time</h3>
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
                     <p class="info-text" style="margin:0;">
-                        Monthly <strong>Principal</strong>, <strong>Interest</strong>, and <strong>Total cost</strong> over the life of the loan.
+                        Above zero: equity (principal; down payment in cumulative mode). Below zero: interest and other costs.
+                        Optional <strong>tax benefit</strong> offsets costs using per-year deductions. Costs rise annually at year boundaries.
                     </p>
-                    <label style="font-size:0.85em; color:#374151; display:inline-flex; align-items:center; gap:6px;">
-                        <input type="checkbox" id="costOverTimeCumulative" style="accent-color:#059669;">
-                        <span>Show cumulative totals</span>
-                    </label>
+                    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                        <label style="font-size:0.85em; color:#374151; display:inline-flex; align-items:center; gap:6px;">
+                            <input type="checkbox" id="costOverTimeIncludeTaxBreak" style="accent-color:#059669;">
+                            <span>Include tax break</span>
+                        </label>
+                        <label style="font-size:0.85em; color:#374151; display:inline-flex; align-items:center; gap:6px;">
+                            <input type="checkbox" id="costOverTimeCumulative" style="accent-color:#059669;">
+                            <span>Show cumulative totals</span>
+                        </label>
+                    </div>
                 </div>
                 <div id="costOverTimeChart"></div>
                 <div id="costOverTimeTooltip" class="timeseries-tooltip"></div>
@@ -875,7 +882,7 @@
                         <div class="form-group">
                             <label for="nonMortgageGrowth">Annual cost growth (non-mortgage, %)</label>
                             <input type="number" id="nonMortgageGrowth" value="3" min="0" max="10" step="0.5">
-                            <span class="info-text">Applied to taxes, insurance, HOA, maintenance, and utilities over time</span>
+                            <span class="info-text">Applied at each year boundary to taxes, insurance, HOA, maintenance, utilities, internet, landscaping, and other (not PMI while active)</span>
                         </div>
                     </div>
                 </div>
@@ -973,7 +980,8 @@
             landscaping: document.getElementById('landscaping'),
             other: document.getElementById('other'),
             chartMonth: document.getElementById('chartMonth'),
-            costOverTimeCumulative: document.getElementById('costOverTimeCumulative')
+            costOverTimeCumulative: document.getElementById('costOverTimeCumulative'),
+            costOverTimeIncludeTaxBreak: document.getElementById('costOverTimeIncludeTaxBreak')
         };
 
         // Add event listeners to all inputs
@@ -1016,6 +1024,43 @@
         // First-year mortgage interest (for tax deduction estimate). Interest deductible on up to $750k loan.
         const MORTGAGE_INTEREST_LOAN_CAP = 750000;
         const SALT_CAP = 40400; // 2026+ (was $10,000 through 2025)
+        const PMI_LTV_THRESHOLD = 0.80; // PMI while balance > 80% of home value
+        let costOverTimeCumulativeMode = false;
+        let costOverTimeIncludeTaxBreakMode = false;
+
+        function annualStepGrowthFactor(yearIndex0, growth) {
+            return Math.pow(1 + growth, yearIndex0);
+        }
+
+        function yearInterestPaid(loanAmount, annualRate, years, yearIndex1Based) {
+            const { interestSeries } = buildAmortizationSeries(loanAmount, annualRate, years);
+            const start = (yearIndex1Based - 1) * 12;
+            const end = Math.min(start + 12, interestSeries.length);
+            let sum = 0;
+            for (let i = start; i < end; i++) sum += interestSeries[i];
+            return sum;
+        }
+
+        function computeAnnualTaxSavings(loanAmount, annualRate, years, yearIndex1Based, taxParams) {
+            const interestPaid = yearInterestPaid(loanAmount, annualRate, years, yearIndex1Based);
+            const deductibleInterest = loanAmount <= MORTGAGE_INTEREST_LOAN_CAP
+                ? interestPaid
+                : interestPaid * (MORTGAGE_INTEREST_LOAN_CAP / loanAmount);
+            const yearIdx0 = yearIndex1Based - 1;
+            const annualPropertyTax = taxParams.homePrice * (taxParams.propertyTaxRate / 100) *
+                annualStepGrowthFactor(yearIdx0, taxParams.nonMortgageGrowth || 0);
+            const saltDeductible = Math.min(annualPropertyTax + taxParams.stateIncomeTax, SALT_CAP);
+            const federalSavings = (deductibleInterest + saltDeductible) * taxParams.federalRate;
+            const stateSavings = (deductibleInterest + taxParams.stateExemption) * taxParams.stateRate;
+            const taxSavingsAnnual = federalSavings + stateSavings;
+            return {
+                taxSavingsAnnual,
+                taxSavingsMonthly: taxSavingsAnnual / 12,
+                deductibleInterest,
+                federalSavings,
+                stateSavings
+            };
+        }
 
         function getAnnualMortgageInterest(principal, annualRate, years) {
             const monthlyRate = annualRate / 100 / 12;
@@ -1077,6 +1122,84 @@
             return { interestSeries, principalSeries, monthlyPayment };
         }
 
+        // Chart sign convention: equity >= 0; only interest & other are negative (costs).
+        function assertCostDisplaySigns(interestDisplay, otherDisplay) {
+            for (const v of [...interestDisplay, ...otherDisplay]) {
+                if (v > 1e-6) {
+                    console.warn('Cost-over-time chart: non-cost value below zero', v);
+                }
+            }
+        }
+
+        // Monthly series for cost-over-time chart (mirrors calculator_logic.py)
+        function buildCostOverTimeSeries(loanAmount, annualRate, years, homePrice, fixedMonthly, cumulative) {
+            const { interestSeries, principalSeries, monthlyPayment } = buildAmortizationSeries(loanAmount, annualRate, years);
+            const months = interestSeries.length;
+            const growth = fixedMonthly.nonMortgageGrowth || 0;
+            const baseWithoutPmi = (fixedMonthly.propertyTax || 0) + (fixedMonthly.insurance || 0) +
+                (fixedMonthly.hoa || 0) + (fixedMonthly.utilities || 0) + (fixedMonthly.internet || 0) +
+                (fixedMonthly.maintenance || 0) + (fixedMonthly.landscaping || 0) + (fixedMonthly.other || 0);
+            const pmiMonthly = fixedMonthly.pmi || 0;
+            const pmiThresholdBalance = homePrice * PMI_LTV_THRESHOLD;
+            const monthlyRate = annualRate / 100 / 12;
+
+            const otherSeries = [];
+            const taxBenefitSeries = new Array(months).fill(0);
+            const includeTaxBreak = !!fixedMonthly.includeTaxBreak;
+            const taxParams = fixedMonthly.taxParams;
+            let balance = loanAmount;
+            for (let idx = 0; idx < months; idx++) {
+                const yearIdx0 = Math.floor(idx / 12);
+                const growthFactor = annualStepGrowthFactor(yearIdx0, growth);
+                const pmiThisMonth = balance > pmiThresholdBalance ? pmiMonthly : 0;
+                otherSeries.push(baseWithoutPmi * growthFactor + pmiThisMonth);
+
+                if (includeTaxBreak && taxParams) {
+                    const year1Based = yearIdx0 + 1;
+                    taxBenefitSeries[idx] = computeAnnualTaxSavings(
+                        loanAmount, annualRate, years, year1Based, taxParams
+                    ).taxSavingsMonthly;
+                }
+
+                const interest = balance * monthlyRate;
+                const principalPaid = Math.max(0, monthlyPayment - interest);
+                balance -= principalPaid;
+            }
+
+            let totalSeries = interestSeries.map((i, idx) => i + principalSeries[idx] + otherSeries[idx]);
+
+            if (cumulative) {
+                const cum = (arr) => {
+                    const out = [];
+                    let running = 0;
+                    for (const v of arr) {
+                        running += v;
+                        out.push(running);
+                    }
+                    return out;
+                };
+                const principalCum = cum(principalSeries);
+                const interestCum = cum(interestSeries);
+                const otherCum = cum(otherSeries);
+                totalSeries = cum(totalSeries);
+                const taxCum = cum(taxBenefitSeries);
+                for (let i = 0; i < months; i++) {
+                    principalSeries[i] = principalCum[i];
+                    interestSeries[i] = interestCum[i];
+                    otherSeries[i] = otherCum[i];
+                    taxBenefitSeries[i] = taxCum[i];
+                }
+            }
+
+            const downPaymentAmount = fixedMonthly.downPaymentAmount || 0;
+            const downPaymentSeries = new Array(months).fill(0);
+            if (downPaymentAmount > 0 && cumulative) {
+                downPaymentSeries.fill(downPaymentAmount);
+            }
+
+            return { interestSeries, principalSeries, otherSeries, downPaymentSeries, taxBenefitSeries, totalSeries, months };
+        }
+
         // Calculate and display monthly rate
         function calculateMonthlyRate() {
             // Get values
@@ -1122,22 +1245,26 @@
             document.getElementById('totalMonthly').textContent = formatCurrency(totalMonthly);
             document.getElementById('totalAnnual').textContent = formatCurrency(totalAnnual);
 
-            // Tax break estimate (itemized: mortgage interest + SALT, each counted once)
+            // Tax break estimate (year 1; chart uses per-year interest when tax toggle is on)
             const federalRate = (parseFloat(inputs.federalTaxRate.value) || 0) / 100;
             const stateRate = (parseFloat(inputs.stateTaxRate.value) || 0) / 100;
             const stateIncomeTax = parseFloat(inputs.stateIncomeTax.value) || 0;
             const stateExemption = parseFloat(inputs.stateExemption.value) || 0;
-            const annualPropertyTax = homePrice * (propertyTaxRate / 100);
-            const annualInterest = getAnnualMortgageInterest(loanAmount, interestRate, loanTerm);
-            const deductibleInterest = loanAmount <= MORTGAGE_INTEREST_LOAN_CAP
-                ? annualInterest
-                : annualInterest * (MORTGAGE_INTEREST_LOAN_CAP / loanAmount);
-            const saltDeductible = Math.min(annualPropertyTax + stateIncomeTax, SALT_CAP);
-            const federalSavings = (deductibleInterest + saltDeductible) * federalRate;
-            const saltSavings = saltDeductible * federalRate;  // breakdown only; not added again to total
-            const stateSavings = (deductibleInterest + stateExemption) * stateRate;  // CA: interest (same $750k cap) + exemption only; no property tax on state
-            const taxBreakAnnual = federalSavings + stateSavings;
-            const taxBreakMonthly = taxBreakAnnual / 12;
+            const nonMortgageGrowthForTax = (parseFloat(inputs.nonMortgageGrowth?.value) || 0) / 100;
+            const taxYear1 = computeAnnualTaxSavings(loanAmount, interestRate, loanTerm, 1, {
+                homePrice,
+                propertyTaxRate,
+                federalRate,
+                stateRate,
+                stateIncomeTax,
+                stateExemption,
+                nonMortgageGrowth: 0
+            });
+            const taxBreakAnnual = taxYear1.taxSavingsAnnual;
+            const taxBreakMonthly = taxYear1.taxSavingsMonthly;
+            const federalSavings = taxYear1.federalSavings;
+            const stateSavings = taxYear1.stateSavings;
+            const saltSavings = Math.min(homePrice * (propertyTaxRate / 100) + stateIncomeTax, SALT_CAP) * federalRate;
 
             document.getElementById('taxBreakTotal').textContent = formatCurrency(taxBreakMonthly);
             document.getElementById('taxBreakFederal').textContent = formatCurrency(federalSavings / 12);
@@ -1187,7 +1314,8 @@
 
             // Update cost-over-time chart (principal, interest, total)
             const nonMortgageGrowth = (parseFloat(inputs.nonMortgageGrowth?.value) || 0) / 100;
-            updateCostOverTimeChart(loanAmount, interestRate, loanTerm, {
+            updateCostOverTimeChart(loanAmount, interestRate, loanTerm, homePrice, {
+                downPaymentAmount,
                 propertyTax,
                 insurance,
                 pmi,
@@ -1198,7 +1326,17 @@
                 landscaping,
                 other,
                 nonMortgageGrowth,
-                cumulative: !!inputs.costOverTimeCumulative?.checked
+                cumulative: !!inputs.costOverTimeCumulative?.checked,
+                includeTaxBreak: !!inputs.costOverTimeIncludeTaxBreak?.checked,
+                taxParams: {
+                    homePrice,
+                    propertyTaxRate,
+                    federalRate,
+                    stateRate,
+                    stateIncomeTax,
+                    stateExemption,
+                    nonMortgageGrowth
+                }
             });
         }
 
@@ -1288,69 +1426,50 @@
             chartContainer.appendChild(legend);
         }
 
-        // Cost-over-time stacked area chart (principal, interest, other, total)
-        function updateCostOverTimeChart(loanAmount, annualRate, years, fixedMonthly) {
+        // Cost-over-time stacked area chart (monthly cash outflow, gross)
+        function updateCostOverTimeChart(loanAmount, annualRate, years, homePrice, fixedMonthly) {
             const container = document.getElementById('costOverTimeChart');
             const tooltip = document.getElementById('costOverTimeTooltip');
-            if (!container || loanAmount <= 0 || annualRate < 0 || years <= 0) {
+            if (!container || loanAmount <= 0 || annualRate < 0 || years <= 0 || homePrice <= 0) {
                 if (container) container.innerHTML = '<p class="info-text">Enter loan details to see cost over time.</p>';
                 if (tooltip) tooltip.classList.remove('visible');
                 return;
             }
 
-            const { interestSeries, principalSeries, monthlyPayment } = buildAmortizationSeries(loanAmount, annualRate, years);
-            const months = interestSeries.length;
-            const baseOther = (fixedMonthly.propertyTax || 0) + (fixedMonthly.insurance || 0) +
-                              (fixedMonthly.pmi || 0) + (fixedMonthly.hoa || 0) +
-                              (fixedMonthly.utilities || 0) + (fixedMonthly.internet || 0) +
-                              (fixedMonthly.maintenance || 0) + (fixedMonthly.landscaping || 0) +
-                              (fixedMonthly.other || 0);
-            const growth = fixedMonthly.nonMortgageGrowth || 0;
+            costOverTimeCumulativeMode = !!fixedMonthly.cumulative;
+            costOverTimeIncludeTaxBreakMode = !!fixedMonthly.includeTaxBreak;
+            const { interestSeries, principalSeries, otherSeries, downPaymentSeries, taxBenefitSeries, months } =
+                buildCostOverTimeSeries(loanAmount, annualRate, years, homePrice, fixedMonthly, costOverTimeCumulativeMode);
 
-            const otherSeries = [];
-            for (let idx = 0; idx < months; idx++) {
-                const yearsElapsed = idx / 12;
-                const factor = Math.pow(1 + growth, yearsElapsed);
-                otherSeries.push(baseOther * factor);
-            }
+            const downPaymentDisplay = downPaymentSeries;
+            const principalDisplay = principalSeries;
+            const interestDisplay = interestSeries.map((v) => -v);
+            const otherDisplay = otherSeries.map((v) => -v);
+            const taxBenefitDisplay = taxBenefitSeries;
+            assertCostDisplaySigns(interestDisplay, otherDisplay);
 
-            let totalSeries = interestSeries.map((i, idx) => i + principalSeries[idx] + otherSeries[idx]);
-
-            if (fixedMonthly.cumulative) {
-                const cum = (arr) => {
-                    const out = [];
-                    let running = 0;
-                    for (let v of arr) {
-                        running += v;
-                        out.push(running);
-                    }
-                    return out;
-                };
-                const principalCum = cum(principalSeries);
-                const interestCum = cum(interestSeries);
-                const otherCum = cum(otherSeries);
-                totalSeries = totalSeries.length ? cum(totalSeries) : totalSeries;
-                // overwrite series with cumulative versions for stacking
-                for (let i = 0; i < months; i++) {
-                    principalSeries[i] = principalCum[i];
-                    interestSeries[i] = interestCum[i];
-                    otherSeries[i] = otherCum[i];
-                }
-            }
-
-            const maxY = Math.max(
-                ...totalSeries,
-                1
+            const equityTopDisplay = downPaymentDisplay.map((d, idx) => d + principalDisplay[idx]);
+            const netDisplay = equityTopDisplay.map((e, idx) =>
+                e + interestDisplay[idx] + otherDisplay[idx] + taxBenefitDisplay[idx]
             );
 
+            const maxPositive = Math.max(...equityTopDisplay, ...(taxBenefitDisplay.length ? taxBenefitDisplay : [0]), 1);
+            const costBottoms = interestDisplay.map((i, idx) => i + otherDisplay[idx]);
+            const effectiveCosts = costBottoms.map((c, idx) => c + taxBenefitDisplay[idx]);
+            const maxNegative = Math.max(...effectiveCosts.map((v) => Math.abs(v)), ...costBottoms.map((v) => Math.abs(v)), 1);
+            const yMin = -maxNegative;
+            const yMax = maxPositive;
+            const ySpan = yMax - yMin;
+
             const width = 620;
-            const height = 230;
+            const height = 250;
             const margin = { top: 20, right: 20, bottom: 28, left: 64 };
             const innerW = width - margin.left - margin.right;
             const innerH = height - margin.top - margin.bottom;
 
             const xFor = (m) => margin.left + (m / (months - 1)) * innerW;
-            const yFor = (v) => margin.top + innerH - (v / maxY) * innerH;
+            const yFor = (v) => margin.top + innerH - ((v - yMin) / ySpan) * innerH;
+            const yZero = yFor(0);
 
             function buildAreaPath(topSeries, bottomSeries) {
                 const top = topSeries.map((v, idx) => `${idx === 0 ? 'M' : 'L'} ${xFor(idx)} ${yFor(v)}`).join(' ');
@@ -1373,77 +1492,107 @@
             svgParts.push(`<line x1="${margin.left}" y1="${margin.top + innerH}" x2="${margin.left + innerW}" y2="${margin.top + innerH}" stroke="#d4d4d4" stroke-width="1"/>`);
             svgParts.push(`<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + innerH}" stroke="#d4d4d4" stroke-width="1"/>`);
 
+            svgParts.push(`<line x1="${margin.left}" y1="${yZero}" x2="${margin.left + innerW}" y2="${yZero}" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4 3"/>`);
+
             const yTicks = 4;
             for (let i = 0; i <= yTicks; i++) {
-                const v = (maxY / yTicks) * i;
+                const v = yMin + (ySpan / yTicks) * i;
                 const y = yFor(v);
-                svgParts.push(`<line x1="${margin.left}" y1="${y}" x2="${margin.left + innerW}" y2="${y}" stroke="#f3f4f6" stroke-width="1"/>`);
+                const gridStroke = Math.abs(v) < 1e-6 ? 'none' : '#f3f4f6';
+                if (gridStroke !== 'none') {
+                    svgParts.push(`<line x1="${margin.left}" y1="${y}" x2="${margin.left + innerW}" y2="${y}" stroke="${gridStroke}" stroke-width="1"/>`);
+                }
                 svgParts.push(`<text x="${margin.left - 4}" y="${y + 4}" text-anchor="end" font-size="10" fill="#6b7280">${formatCurrency(v)}</text>`);
             }
 
             xTicks.forEach((idx) => {
                 const x = xFor(idx);
                 svgParts.push(`<line x1="${x}" y1="${margin.top + innerH}" x2="${x}" y2="${margin.top + innerH + 4}" stroke="#9ca3af" stroke-width="1"/>`);
-                const label = (idx + 1);
-                svgParts.push(`<text x="${x}" y="${margin.top + innerH + 16}" text-anchor="middle" font-size="10" fill="#6b7280">${label}</text>`);
+                const year = Math.ceil((idx + 1) / 12);
+                svgParts.push(`<text x="${x}" y="${margin.top + innerH + 16}" text-anchor="middle" font-size="10" fill="#6b7280">Yr ${year}</text>`);
             });
 
-            // Stacked areas: principal (bottom), interest (middle), other (top)
-            const principalBottom = new Array(months).fill(0);
-            const principalTop = principalSeries;
-            const interestBottom = principalSeries;
-            const interestTop = principalSeries.map((p, idx) => p + interestSeries[idx]);
-            const otherBottom = interestTop;
-            const otherTop = totalSeries;
+            // Above zero: down payment then principal (equity). Below zero: interest + other (costs only).
+            const zeroLine = new Array(months).fill(0);
+            const downBottom = zeroLine;
+            const downTop = downPaymentDisplay;
+            const principalBottom = downTop;
+            const principalTop = equityTopDisplay;
+            const costsBottom = interestDisplay.map((i, idx) => i + otherDisplay[idx]);
+            const otherBottom = costsBottom;
+            const otherTop = interestDisplay;
+            const interestBottom = interestDisplay;
+            const interestTop = zeroLine;
+            const taxBottom = costsBottom;
+            const taxTop = costsBottom.map((c, idx) => c + taxBenefitDisplay[idx]);
 
-            const areaPrincipal = buildAreaPath(principalTop, principalBottom);
-            const areaInterest = buildAreaPath(interestTop, interestBottom);
             const areaOther = buildAreaPath(otherTop, otherBottom);
+            const areaInterest = buildAreaPath(interestTop, interestBottom);
+            const areaTax = buildAreaPath(taxTop, taxBottom);
+            const areaDown = buildAreaPath(downTop, downBottom);
+            const areaPrincipal = buildAreaPath(principalTop, principalBottom);
 
-            // draw bottom to top for correct layering
-            svgParts.push(`<path d="${areaPrincipal}" fill="rgba(59, 130, 246, 0.45)" stroke="rgba(59, 130, 246, 0.9)" stroke-width="1"/>`);
-            svgParts.push(`<path d="${areaInterest}" fill="rgba(249, 115, 22, 0.40)" stroke="rgba(249, 115, 22, 0.9)" stroke-width="1"/>`);
             svgParts.push(`<path d="${areaOther}" fill="rgba(15, 118, 110, 0.35)" stroke="rgba(15, 118, 110, 0.9)" stroke-width="1"/>`);
+            svgParts.push(`<path d="${areaInterest}" fill="rgba(249, 115, 22, 0.40)" stroke="rgba(249, 115, 22, 0.9)" stroke-width="1"/>`);
+            if (costOverTimeIncludeTaxBreakMode && taxBenefitDisplay.some((t) => t > 0)) {
+                svgParts.push(`<path d="${areaTax}" fill="rgba(229, 231, 235, 0.75)" stroke="rgba(209, 213, 219, 0.95)" stroke-width="1" stroke-dasharray="3 2"/>`);
+            }
+            if (costOverTimeCumulativeMode && downPaymentDisplay.some((d) => d > 0)) {
+                svgParts.push(`<path d="${areaDown}" fill="rgba(147, 197, 253, 0.55)" stroke="rgba(37, 99, 235, 0.9)" stroke-width="1"/>`);
+            }
+            svgParts.push(`<path d="${areaPrincipal}" fill="rgba(59, 130, 246, 0.45)" stroke="rgba(59, 130, 246, 0.9)" stroke-width="1"/>`);
 
-            // Outline total on top for readability
-            const totalLine = totalSeries.map((v, idx) => `${idx === 0 ? 'M' : 'L'} ${xFor(idx)} ${yFor(v)}`).join(' ');
-            svgParts.push(`<path d="${totalLine}" fill="none" stroke="#0f766e" stroke-width="2"/>`);
+            const netLine = netDisplay.map((v, idx) => `${idx === 0 ? 'M' : 'L'} ${xFor(idx)} ${yFor(v)}`).join(' ');
+            svgParts.push(`<path d="${netLine}" fill="none" stroke="#047857" stroke-width="2"/>`);
 
-            // Hover regions for tooltip
             const step = months > 1 ? (innerW / (months - 1)) : innerW;
             for (let idx = 0; idx < months; idx++) {
                 const cxMonth = xFor(idx);
-                const pVal = principalSeries[idx];
-                const iVal = interestSeries[idx];
-                const oVal = otherSeries[idx];
-                const tVal = totalSeries[idx];
+                const dVal = downPaymentDisplay[idx];
+                const pVal = principalDisplay[idx];
+                const iVal = interestDisplay[idx];
+                const oVal = otherDisplay[idx];
+                const taxVal = taxBenefitDisplay[idx];
+                const tVal = netDisplay[idx];
                 svgParts.push(
                     `<rect x="${cxMonth - step / 2}" y="${margin.top}" width="${step}" height="${innerH}" fill="transparent"` +
-                    ` onmousemove="showCostOverTimeTooltip(evt, ${idx + 1}, ${pVal.toFixed(2)}, ${iVal.toFixed(2)}, ${oVal.toFixed(2)}, ${tVal.toFixed(2)})"` +
+                    ` onmousemove="showCostOverTimeTooltip(evt, ${idx + 1}, ${dVal.toFixed(2)}, ${pVal.toFixed(2)}, ${iVal.toFixed(2)}, ${oVal.toFixed(2)}, ${taxVal.toFixed(2)}, ${tVal.toFixed(2)})"` +
                     ` onmouseout="hideCostOverTimeTooltip()" />`
                 );
             }
 
             svgParts.push('</svg>');
 
+            const downLegend = (costOverTimeCumulativeMode && downPaymentDisplay.some((d) => d > 0))
+                ? `<div class="timeseries-legend-item">
+                        <span class="timeseries-legend-swatch" style="background:#93c5fd"></span>
+                        <span>Down payment (+ equity)</span>
+                    </div>`
+                : '';
             const legendHtml = `
                 <div class="timeseries-legend">
                     <div class="timeseries-legend-item">
-                        <span class="timeseries-legend-swatch" style="background:#0f766e"></span>
-                        <span>Total cost</span>
+                        <span class="timeseries-legend-swatch" style="background:transparent;border:2px solid #047857"></span>
+                        <span>Net${costOverTimeIncludeTaxBreakMode ? ' (equity − costs + tax)' : ' (equity − costs)'}</span>
                     </div>
+                    ${downLegend}
                     <div class="timeseries-legend-item">
-                        <span class="timeseries-legend-swatch" style="background:#0f766e"></span>
-                        <span>Other (tax/insurance/HOA/etc.)</span>
+                        <span class="timeseries-legend-swatch" style="background:#3b82f6"></span>
+                        <span>Principal (+ equity)</span>
                     </div>
                     <div class="timeseries-legend-item">
                         <span class="timeseries-legend-swatch" style="background:#f97316"></span>
-                        <span>Interest</span>
+                        <span>Interest (− cost)</span>
                     </div>
                     <div class="timeseries-legend-item">
-                        <span class="timeseries-legend-swatch" style="background:#3b82f6"></span>
-                        <span>Principal</span>
+                        <span class="timeseries-legend-swatch" style="background:#0f766e"></span>
+                        <span>Other (− cost)</span>
                     </div>
+                    ${costOverTimeIncludeTaxBreakMode ? `
+                    <div class="timeseries-legend-item">
+                        <span class="timeseries-legend-swatch" style="background:#f3f4f6;border:1px dashed #d1d5db"></span>
+                        <span>Tax benefit (offset, not cost)</span>
+                    </div>` : ''}
                 </div>
             `;
 
@@ -1451,7 +1600,7 @@
         }
 
         // Tooltip handlers for cost-over-time chart
-        function showCostOverTimeTooltip(evt, month, principal, interest, other, total) {
+        function showCostOverTimeTooltip(evt, month, downPayment, principal, interest, other, taxBenefit, total) {
             const tooltip = document.getElementById('costOverTimeTooltip');
             const container = document.getElementById('costOverTimeChart');
             if (!tooltip || !container) return;
@@ -1460,12 +1609,26 @@
             const x = evt.clientX - rect.left;
             const y = evt.clientY - rect.top;
 
+            const cumulativeLabel = costOverTimeCumulativeMode ? ' (cumulative)' : '';
+            const downLine = downPayment > 0
+                ? `Down payment${cumulativeLabel}: ${formatCurrency(downPayment)}<br>`
+                : '';
+            const taxLine = (costOverTimeIncludeTaxBreakMode && taxBenefit > 0)
+                ? `Tax benefit${cumulativeLabel}: ${formatCurrency(taxBenefit)}<br>`
+                : '';
+            const cashOut = downPayment + principal - interest - other;
+            const afterTaxCost = cashOut - taxBenefit;
             tooltip.innerHTML =
-                `Month ${month}<br>` +
-                `Principal: ${formatCurrency(principal)}<br>` +
-                `Interest: ${formatCurrency(interest)}<br>` +
-                `Other: ${formatCurrency(other)}<br>` +
-                `<strong>Total: ${formatCurrency(total)}</strong>`;
+                `Month ${month} (year ${Math.ceil(month / 12)})<br>` +
+                downLine +
+                `Principal${cumulativeLabel}: ${formatCurrency(principal)}<br>` +
+                `Interest${cumulativeLabel}: ${formatCurrency(interest)}<br>` +
+                `Other${cumulativeLabel}: ${formatCurrency(other)}<br>` +
+                taxLine +
+                `<strong>Net${cumulativeLabel}: ${formatCurrency(total)}</strong><br>` +
+                `<span style="font-size:0.9em;color:#555">Cash out: ${formatCurrency(cashOut)}` +
+                (costOverTimeIncludeTaxBreakMode ? ` · After tax: ${formatCurrency(afterTaxCost)}` : '') +
+                `</span>`;
 
             tooltip.style.left = `${x}px`;
             tooltip.style.top = `${y}px`;
