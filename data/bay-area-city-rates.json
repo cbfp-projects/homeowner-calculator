@@ -144,12 +144,12 @@
     },
     {
       "city": "San Carlos",
-      "rate": 6.49,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
       "city": "Redwood City",
-      "rate": 6.49,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
@@ -169,7 +169,7 @@
     },
     {
       "city": "Woodside",
-      "rate": 6.49,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
@@ -184,7 +184,7 @@
     },
     {
       "city": "Los Altos",
-      "rate": 6.45,
+      "rate": 6.46,
       "note": "Manual estimate"
     },
     {
@@ -194,7 +194,7 @@
     },
     {
       "city": "Mountain View",
-      "rate": 6.45,
+      "rate": 6.46,
       "note": "Manual estimate"
     },
     {
@@ -204,12 +204,12 @@
     },
     {
       "city": "Cupertino",
-      "rate": 6.45,
+      "rate": 6.46,
       "note": "Manual estimate"
     },
     {
       "city": "Saratoga",
-      "rate": 6.45,
+      "rate": 6.46,
       "note": "Manual estimate"
     },
     {
@@ -219,17 +219,17 @@
     },
     {
       "city": "Los Gatos",
-      "rate": 6.49,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
       "city": "Campbell",
-      "rate": 6.49,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
       "city": "Santa Clara",
-      "rate": 6.49,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
@@ -254,7 +254,7 @@
     },
     {
       "city": "Oakland",
-      "rate": 6.49,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
@@ -264,7 +264,7 @@
     },
     {
       "city": "Walnut Creek",
-      "rate": 6.49,
+      "rate": 6.5,
       "note": "Manual estimate"
     },
     {
@@ -323,6 +323,6 @@
     "series": "MORTGAGE30US",
     "url": "https://api.stlouisfed.org/fred/series/observations?series_id=MORTGAGE30US",
     "observationDate": "2026-06-11",
-    "retrievedAtUtc": "2026-06-12T17:17:41Z"
+    "retrievedAtUtc": "2026-06-13T15:51:40Z"
   }
 }
