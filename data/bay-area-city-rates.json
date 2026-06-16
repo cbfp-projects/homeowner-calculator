@@ -323,6 +323,6 @@
     "series": "MORTGAGE30US",
     "url": "https://api.stlouisfed.org/fred/series/observations?series_id=MORTGAGE30US",
     "observationDate": "2026-06-11",
-    "retrievedAtUtc": "2026-06-15T18:47:33Z"
+    "retrievedAtUtc": "2026-06-16T18:40:17Z"
   }
 }
