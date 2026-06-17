@@ -31,15 +31,17 @@
         .header {
             background: linear-gradient(135deg, #059669 0%, #047857 100%);
             color: white;
-            padding: 30px;
+            padding: 16px 30px 30px 30px;
             text-align: center;
-            position: relative;
+        }
+
+        .header-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 4px;
         }
 
         .print-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             border: none;
             border-radius: 999px;
             background: white;
@@ -55,13 +57,6 @@
         .print-button:hover {
             box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
             transform: translateY(-1px);
-        }
-
-        @media (max-width: 768px) {
-            .print-button {
-                position: static;
-                margin-bottom: 16px;
-            }
         }
 
         .header h1 {
@@ -638,7 +633,15 @@
             visibility: visible;
         }
 
+        .print-summary {
+            display: none;
+        }
+
         @media print {
+            @page {
+                margin: 14mm;
+            }
+
             body {
                 background: #fff !important;
                 padding: 0;
@@ -655,37 +658,123 @@
             .header {
                 background: #fff !important;
                 color: #111 !important;
-                padding: 0 0 16px 0;
+                text-align: left;
+                padding: 0 0 12px 0;
                 border-bottom: 2px solid #059669;
             }
 
-            .total-result {
-                background: #fff !important;
-                border: 1px solid #d1d5db;
+            .header h1 {
+                font-size: 1.6em;
+                margin-bottom: 4px;
             }
 
-            .total-result .result-label,
-            .total-result .result-value {
-                color: #111 !important;
+            .header p {
+                opacity: 1;
+                color: #555;
             }
 
-            .total-result .result-item {
-                border-bottom: 1px solid #e0e0e0;
-            }
-
-            .total-result .total-result-minimum-note {
-                color: #555 !important;
-            }
-
+            /* Hide all interactive/input chrome in print */
             .print-button,
-            .rate-map-button,
-            .toggle-icon {
+            .header-toolbar,
+            .purchase-section-wrap,
+            .results-top-row,
+            .content,
+            .info-tooltip {
                 display: none !important;
             }
 
-            .toggle-header {
-                background: #fff;
-                cursor: default;
+            /* Show the print-only report summary */
+            .print-summary {
+                display: block;
+                margin-top: 18px;
+            }
+
+            .print-summary-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 36px;
+            }
+
+            .print-section-title {
+                font-size: 0.95em;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #047857;
+                margin: 0 0 8px 0;
+                padding-bottom: 4px;
+                border-bottom: 1px solid #d1d5db;
+            }
+
+            .print-col > .print-section-title:not(:first-child) {
+                margin-top: 22px;
+            }
+
+            .print-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 16px;
+                padding: 6px 0;
+                font-size: 0.9em;
+                color: #333;
+                border-bottom: 1px solid #f0f0f0;
+            }
+
+            .print-row span:last-child {
+                font-weight: 600;
+                color: #111;
+                white-space: nowrap;
+            }
+
+            .print-row-total {
+                border-bottom: none;
+                border-top: 2px solid #333;
+                margin-top: 4px;
+                padding-top: 8px;
+                font-weight: 700;
+            }
+
+            .print-row-group-start {
+                margin-top: 10px;
+                border-top: 1px solid #d1d5db;
+                padding-top: 10px;
+            }
+
+            .cost-over-time-controls {
+                display: none !important;
+            }
+
+            .print-total-box {
+                margin: 18px 0;
+                padding: 14px 16px;
+                border: 2px solid #047857;
+                border-radius: 6px;
+                text-align: center;
+            }
+
+            .print-total-label {
+                font-size: 0.8em;
+                letter-spacing: 0.06em;
+                color: #047857;
+                font-weight: 700;
+            }
+
+            .print-total-value {
+                font-size: 2em;
+                font-weight: 800;
+                color: #111;
+                margin-top: 4px;
+            }
+
+            /* Keep charts, in color, and avoid breaking them across pages */
+            .chart-section {
+                padding: 0;
+                margin-top: 22px;
+                break-inside: avoid;
+            }
+
+            .chart-container {
+                padding: 0;
+                break-inside: avoid;
             }
 
             .chart-container,
@@ -695,19 +784,60 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-
-            .info-tooltip {
-                display: none !important;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <button class="print-button" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            <div class="header-toolbar">
+                <button class="print-button" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            </div>
             <h1>🏠 Homeowner Monthly Rate Estimator</h1>
             <p>Calculate your total monthly homeownership costs</p>
+        </div>
+
+        <div id="printSummary" class="print-summary" aria-hidden="true">
+            <div class="print-summary-grid">
+                <div class="print-col">
+                    <h2 class="print-section-title">Home Details</h2>
+                    <div class="print-row"><span>Home Price</span><span id="psHomePrice">--</span></div>
+                    <div class="print-row"><span>Down Payment</span><span id="psDownPayment">--</span></div>
+                    <div class="print-row"><span>Loan Amount</span><span id="psLoanAmount">--</span></div>
+                    <div class="print-row"><span>Interest Rate</span><span id="psInterestRate">--</span></div>
+                    <div class="print-row"><span>Loan Term</span><span id="psLoanTerm">--</span></div>
+                    <div class="print-row"><span>Property Tax Rate</span><span id="psPropertyTaxRate">--</span></div>
+                    <div class="print-row"><span>Home Insurance (Annual)</span><span id="psHomeInsurance">--</span></div>
+                    <div class="print-row"><span>PMI (Monthly)</span><span id="psPmi">--</span></div>
+
+                    <div class="print-total-box">
+                        <div class="print-total-label">NET MONTHLY COST</div>
+                        <div class="print-total-value" id="psNetMonthlyBig">--</div>
+                    </div>
+
+                    <h2 class="print-section-title">Summary</h2>
+                    <div class="print-row"><span>Total Monthly Cost</span><span id="psTotalMonthlySummary">--</span></div>
+                    <div class="print-row"><span>Net Monthly Cost (after tax break)</span><span id="psNetMonthly">--</span></div>
+                    <div class="print-row"><span>Estimated Tax Break (Monthly)</span><span id="psTaxBreak">--</span></div>
+                    <div class="print-row print-row-group-start"><span>Total Annual Cost</span><span id="psTotalAnnual">--</span></div>
+                    <div class="print-row"><span>Net Annual Cost</span><span id="psNetAnnual">--</span></div>
+                </div>
+
+                <div class="print-col">
+                    <h2 class="print-section-title">Monthly Cost Breakdown</h2>
+                    <div class="print-row"><span>Principal &amp; Interest</span><span id="psPI">--</span></div>
+                    <div class="print-row"><span>Property Tax</span><span id="psPropertyTax">--</span></div>
+                    <div class="print-row"><span>Insurance</span><span id="psInsurance">--</span></div>
+                    <div class="print-row"><span>PMI</span><span id="psPmiMonthly">--</span></div>
+                    <div class="print-row"><span>HOA</span><span id="psHoa">--</span></div>
+                    <div class="print-row"><span>Utilities</span><span id="psUtilities">--</span></div>
+                    <div class="print-row"><span>Internet/Cable/Phone</span><span id="psInternet">--</span></div>
+                    <div class="print-row"><span>Maintenance</span><span id="psMaintenance">--</span></div>
+                    <div class="print-row"><span>Landscaping</span><span id="psLandscaping">--</span></div>
+                    <div class="print-row"><span>Other</span><span id="psOther">--</span></div>
+                    <div class="print-row print-row-total"><span>Total Monthly Cost</span><span id="psTotalMonthly">--</span></div>
+                </div>
+            </div>
         </div>
 
         <div class="purchase-section-wrap">
@@ -861,7 +991,7 @@
                         Above zero: equity (principal; down payment in cumulative mode). Below zero: interest and other costs.
                         Optional <strong>tax benefit</strong> offsets costs using per-year deductions. Costs rise annually at year boundaries.
                     </p>
-                    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+                    <div class="cost-over-time-controls" style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
                         <label style="font-size:0.85em; color:#374151; display:inline-flex; align-items:center; gap:6px;">
                             <input type="checkbox" id="costOverTimeIncludeTaxBreak" style="accent-color:#059669;">
                             <span>Include tax break</span>
@@ -1365,8 +1495,17 @@
             document.getElementById('taxBreakSALT').textContent = formatCurrency(saltSavings / 12);
 
             const netMonthlyCost = Math.max(0, totalMonthly - taxBreakMonthly);
+            const netAnnualCost = Math.max(0, totalAnnual - taxBreakAnnual);
             document.getElementById('netMonthly').textContent = formatCurrency(netMonthlyCost);
-            document.getElementById('netAnnual').textContent = formatCurrency(Math.max(0, totalAnnual - taxBreakAnnual));
+            document.getElementById('netAnnual').textContent = formatCurrency(netAnnualCost);
+
+            updatePrintSummary({
+                homePrice, downPaymentPercent, downPaymentAmount, loanAmount,
+                interestRate, loanTerm, propertyTaxRate, homeInsurance, pmi,
+                principalInterest, propertyTax, insurance, hoa, utilities,
+                internet, maintenance, landscaping, other,
+                totalMonthly, totalAnnual, netMonthlyCost, netAnnualCost, taxBreakMonthly
+            });
 
             const desiredMonthlySaving = parseFloat(inputs.desiredMonthlySaving.value) || 0;
             const monthlyDaycare = parseFloat(inputs.monthlyDaycare.value) || 0;
@@ -1431,6 +1570,43 @@
                     nonMortgageGrowth
                 }
             });
+        }
+
+        // Populate the print-only report summary (hidden on screen, shown when printing)
+        function updatePrintSummary(d) {
+            const set = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            };
+            const trimRate = (n) => Number(n).toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+
+            set('psHomePrice', formatCurrency(d.homePrice));
+            set('psDownPayment', `${formatCurrency(d.downPaymentAmount)} (${trimRate(d.downPaymentPercent)}%)`);
+            set('psLoanAmount', formatCurrency(d.loanAmount));
+            set('psInterestRate', `${trimRate(d.interestRate)}%`);
+            set('psLoanTerm', `${d.loanTerm} years`);
+            set('psPropertyTaxRate', `${trimRate(d.propertyTaxRate)}%`);
+            set('psHomeInsurance', formatCurrency(d.homeInsurance));
+            set('psPmi', formatCurrency(d.pmi));
+
+            set('psNetMonthlyBig', formatCurrency(d.netMonthlyCost));
+            set('psTotalMonthlySummary', formatCurrency(d.totalMonthly));
+            set('psNetMonthly', formatCurrency(d.netMonthlyCost));
+            set('psTaxBreak', formatCurrency(d.taxBreakMonthly));
+            set('psTotalAnnual', formatCurrency(d.totalAnnual));
+            set('psNetAnnual', formatCurrency(d.netAnnualCost));
+
+            set('psPI', formatCurrency(d.principalInterest));
+            set('psPropertyTax', formatCurrency(d.propertyTax));
+            set('psInsurance', formatCurrency(d.insurance));
+            set('psPmiMonthly', formatCurrency(d.pmi));
+            set('psHoa', formatCurrency(d.hoa));
+            set('psUtilities', formatCurrency(d.utilities));
+            set('psInternet', formatCurrency(d.internet));
+            set('psMaintenance', formatCurrency(d.maintenance));
+            set('psLandscaping', formatCurrency(d.landscaping));
+            set('psOther', formatCurrency(d.other));
+            set('psTotalMonthly', formatCurrency(d.totalMonthly));
         }
 
         // Pie chart colors (distinct palette)
@@ -2149,6 +2325,28 @@
                 console.error(error);
                 setRateMapStatus('Unable to load the rate map data. If opening the file directly, serve the folder locally so JSON files can be fetched.');
             }
+        }
+
+        // When printing, force the cost-over-time chart to include the tax break,
+        // then restore the on-screen state afterward.
+        let savedIncludeTaxBreakState = null;
+        function applyPrintChartState(isPrinting) {
+            const cb = inputs.costOverTimeIncludeTaxBreak;
+            if (!cb) return;
+            if (isPrinting) {
+                if (savedIncludeTaxBreakState === null) savedIncludeTaxBreakState = cb.checked;
+                cb.checked = true;
+            } else if (savedIncludeTaxBreakState !== null) {
+                cb.checked = savedIncludeTaxBreakState;
+                savedIncludeTaxBreakState = null;
+            }
+            calculateMonthlyRate();
+        }
+        window.addEventListener('beforeprint', () => applyPrintChartState(true));
+        window.addEventListener('afterprint', () => applyPrintChartState(false));
+        const printMediaQuery = window.matchMedia && window.matchMedia('print');
+        if (printMediaQuery && printMediaQuery.addEventListener) {
+            printMediaQuery.addEventListener('change', (e) => applyPrintChartState(e.matches));
         }
 
         // Initial calculation
