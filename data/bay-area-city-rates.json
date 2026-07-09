@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-02",
+  "lastUpdated": "2026-07-09",
   "loanType": "30-year fixed",
   "estimateBasis": "Daily update from FRED MORTGAGE30US national 30-year fixed average; city rates are shifted from prior city estimates by the source-vs-median delta.",
   "nationalHistory": [
@@ -79,242 +79,242 @@
   "rates": [
     {
       "city": "San Francisco",
-      "rate": 6.47,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Daly City",
-      "rate": 6.47,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Brisbane",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Colma",
-      "rate": 6.46,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "South San Francisco",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Pacifica",
-      "rate": 6.47,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "San Bruno",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Millbrae",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Burlingame",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Hillsborough",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "San Mateo",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Foster City",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Belmont",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "San Carlos",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Redwood City",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Atherton",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Menlo Park",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "East Palo Alto",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Woodside",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Portola Valley",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Palo Alto",
-      "rate": 6.34,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Los Altos",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Los Altos Hills",
-      "rate": 6.34,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Mountain View",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Sunnyvale",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Cupertino",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Saratoga",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Monte Sereno",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Los Gatos",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Campbell",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Santa Clara",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "San Jose",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Milpitas",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Fremont",
-      "rate": 6.43,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Hayward",
-      "rate": 6.46,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Oakland",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Berkeley",
-      "rate": 6.38,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Walnut Creek",
-      "rate": 6.42,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Half Moon Bay",
-      "rate": 6.47,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Skyline District",
-      "rate": 6.51,
-      "note": "Manual estimate for Skyline/Santa Cruz Mountains area"
-    },
-    {
-      "city": "La Honda",
-      "rate": 6.51,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Boulder Creek",
       "rate": 6.54,
       "note": "Manual estimate"
     },
     {
-      "city": "Ben Lomond",
-      "rate": 6.51,
+      "city": "Daly City",
+      "rate": 6.54,
       "note": "Manual estimate"
     },
     {
-      "city": "Felton",
-      "rate": 6.51,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Scotts Valley",
-      "rate": 6.47,
-      "note": "Manual estimate"
-    },
-    {
-      "city": "Santa Cruz",
+      "city": "Brisbane",
       "rate": 6.5,
       "note": "Manual estimate"
     },
     {
+      "city": "Colma",
+      "rate": 6.53,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "South San Francisco",
+      "rate": 6.5,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Pacifica",
+      "rate": 6.54,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "San Bruno",
+      "rate": 6.5,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Millbrae",
+      "rate": 6.5,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Burlingame",
+      "rate": 6.5,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Hillsborough",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "San Mateo",
+      "rate": 6.5,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Foster City",
+      "rate": 6.5,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Belmont",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "San Carlos",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Redwood City",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Atherton",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Menlo Park",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "East Palo Alto",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Woodside",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Portola Valley",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Palo Alto",
+      "rate": 6.41,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Los Altos",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Los Altos Hills",
+      "rate": 6.41,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Mountain View",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Sunnyvale",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Cupertino",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Saratoga",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Monte Sereno",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Los Gatos",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Campbell",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Santa Clara",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "San Jose",
+      "rate": 6.5,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Milpitas",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Fremont",
+      "rate": 6.5,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Hayward",
+      "rate": 6.53,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Oakland",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Berkeley",
+      "rate": 6.45,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Walnut Creek",
+      "rate": 6.49,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Half Moon Bay",
+      "rate": 6.54,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Skyline District",
+      "rate": 6.58,
+      "note": "Manual estimate for Skyline/Santa Cruz Mountains area"
+    },
+    {
+      "city": "La Honda",
+      "rate": 6.58,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Boulder Creek",
+      "rate": 6.61,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Ben Lomond",
+      "rate": 6.58,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Felton",
+      "rate": 6.58,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Scotts Valley",
+      "rate": 6.54,
+      "note": "Manual estimate"
+    },
+    {
+      "city": "Santa Cruz",
+      "rate": 6.57,
+      "note": "Manual estimate"
+    },
+    {
       "city": "Capitola",
-      "rate": 6.47,
+      "rate": 6.54,
       "note": "Manual estimate"
     },
     {
       "city": "Aptos",
-      "rate": 6.51,
+      "rate": 6.58,
       "note": "Manual estimate"
     }
   ],
@@ -322,7 +322,7 @@
     "name": "FRED",
     "series": "MORTGAGE30US",
     "url": "https://api.stlouisfed.org/fred/series/observations?series_id=MORTGAGE30US",
-    "observationDate": "2026-07-02",
-    "retrievedAtUtc": "2026-07-08T16:12:13Z"
+    "observationDate": "2026-07-09",
+    "retrievedAtUtc": "2026-07-09T16:44:59Z"
   }
 }
