@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-08",
+  "lastUpdated": "2026-10-15",
   "loanType": "30-year fixed",
   "estimateBasis": "Daily update from FRED MORTGAGE30US national 30-year fixed average; city rates are shifted from prior city estimates by the source-vs-median delta.",
   "nationalHistory": [
@@ -322,7 +322,7 @@
     "name": "FRED",
     "series": "MORTGAGE30US",
     "url": "https://api.stlouisfed.org/fred/series/observations?series_id=MORTGAGE30US",
-    "observationDate": "2026-10-08",
-    "retrievedAtUtc": "2026-10-14T18:41:32Z"
+    "observationDate": "2026-10-15",
+    "retrievedAtUtc": "2026-10-15T18:21:33Z"
   }
 }
